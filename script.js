@@ -215,7 +215,7 @@ async function submitOrder() {
     };
 
     try {
-      const resp = await fetch('/api/orders', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(order)});
+      const resp = await fetch((window.API_BASE||'') + '/api/orders', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(order)});
       if (!resp.ok) throw new Error('fail');
     } catch(e) {
       checkoutStatus.textContent = 'Ordine non inviato. Il server è attivo?';
