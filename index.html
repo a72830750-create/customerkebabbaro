@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALI KEBAB</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo-wrap">
+                <span class="logo-badge"><img src="ali-kebabbaro-logo.png" alt="ALI KEBABBARO logo" class="logo-img"></span>
+                <span class="brand-name">ALI 🥂 KEBABBARO</span>
+            </a>
+            <span style="font-size:14px; color:#555; margin-left:12px; font-weight:700;">Consegna solo a Poggio a Caiano</span>
+        </div>
+    </nav>
+    <div class="page-content">
+        <h2>Il Nostro Menu</h2>
+
+        <div class="quick-nav">
+            <button class="quick-nav-btn active" data-target="kebab-plates">Kebab e Piatti</button>
+            <button class="quick-nav-btn" data-target="sandwiches-wraps">Panini e Piadine</button>
+            <button class="quick-nav-btn" data-target="other-dishes">Altri Piatti</button>
+            <button class="quick-nav-btn" data-target="desserts">Dolci</button>
+            <button class="quick-nav-btn" data-target="offerte">Offers</button>
+        </div>
+
+        <!-- Kebab e Piatti -->
+        <section id="kebab-plates">
+            <h3>Kebab e Piatti</h3>
+            <div class="dish-grid">
+                <div class="dish-card" data-name="Vaschetta Solo Carne" data-price="7.00" data-sizes='{"Piccolo":7.00,"Grande":12.00}'>
+                    <h4 class="dish-card-name">Vaschetta Solo Carne</h4>
+                    <p class="dish-card-price">€7.00</p>
+                    <select class="size-selector">
+                        <option value="Piccolo" data-price="7.00">Piccolo - €7.00</option>
+                        <option value="Grande" data-price="12.00">Grande - €12.00</option>
+                    </select>
+                    <button class="add-to-cart-btn" data-name="Vaschetta Solo Carne" data-price="7.00">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Vaschetta Mista" data-price="6.00" data-sizes='{"Piccolo":6.00,"Grande":10.00}'>
+                    <h4 class="dish-card-name">Vaschetta Mista</h4>
+                    <p class="dish-card-price">€6.00</p>
+                    <select class="size-selector">
+                        <option value="Piccolo" data-price="6.00">Piccolo - €6.00</option>
+                        <option value="Grande" data-price="10.00">Grande - €10.00</option>
+                    </select>
+                    <button class="add-to-cart-btn" data-name="Vaschetta Mista" data-price="6.00">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Piatto Kebab" data-price="6.00" data-sizes='{"Piccolo":6.00,"Grande":10.00}'>
+                    <h4 class="dish-card-name">Piatto Kebab</h4>
+                    <p class="dish-card-price">€6.00</p>
+                    <select class="size-selector">
+                        <option value="Piccolo" data-price="6.00">Piccolo - €6.00</option>
+                        <option value="Grande" data-price="10.00">Grande - €10.00</option>
+                    </select>
+                    <button class="add-to-cart-btn" data-name="Piatto Kebab" data-price="6.00">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Piatto Tanta Roba" data-price="10.00">
+                    <h4 class="dish-card-name">Piatto Tanta Roba</h4>
+                    <p class="dish-card-price">€10.00</p>
+                    <button class="add-to-cart-btn" data-name="Piatto Tanta Roba" data-price="10.00">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Seekh Kebab" data-price="5.00">
+                    <h4 class="dish-card-name">Seekh Kebab</h4>
+                    <p class="dish-card-price">€5.00</p>
+                    <button class="add-to-cart-btn" data-name="Seekh Kebab" data-price="5.00">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Nuggets di Pollo" data-price="5.00">
+                    <h4 class="dish-card-name">Nuggets di Pollo</h4>
+                    <p class="dish-card-price">€5.00</p>
+                    <button class="add-to-cart-btn" data-name="Nuggets di Pollo" data-price="5.00">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Samosa Fritta" data-price="5.00">
+                    <h4 class="dish-card-name">Samosa Fritta</h4>
+                    <p class="dish-card-price">€5.00</p>
+                    <button class="add-to-cart-btn" data-name="Samosa Fritta" data-price="5.00">Aggiungi al Carrello</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Panini e Piadine -->
+        <section id="sandwiches-wraps">
+            <h3>Panini e Piadine</h3>
+            <div class="dish-grid">
+                <div class="dish-card" data-name="Menù Panino" data-price="7.50">
+                    <h4 class="dish-card-name">Menù Panino</h4>
+                    <p class="dish-card-price">€7.50</p>
+                    <button class="add-to-cart-btn" data-name="Menù Panino" data-price="7.50">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Menù Piadina" data-price="8.50">
+                    <h4 class="dish-card-name">Menù Piadina</h4>
+                    <p class="dish-card-price">€8.50</p>
+                    <button class="add-to-cart-btn" data-name="Menù Piadina" data-price="8.50">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Panino Kebab" data-price="5.00">
+                    <h4 class="dish-card-name">Panino Kebab</h4>
+                    <p class="dish-card-price">€5.00</p>
+                    <p class="wed-offer" style="display:none; color:#A52824; font-weight:700; font-size:13px;">Offerta speciale mercoledì: €4.50!</p>
+                    <button class="add-to-cart-btn" data-name="Panino Kebab" data-price="5.00">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Piadina Kebab" data-price="5.00">
+                    <h4 class="dish-card-name">Piadina Kebab</h4>
+                    <p class="dish-card-price">€5.00</p>
+                    <button class="add-to-cart-btn" data-name="Piadina Kebab" data-price="5.00">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Panino Falafel" data-price="5.00">
+                    <h4 class="dish-card-name">Panino Falafel</h4>
+                    <p class="dish-card-price">€5.00</p>
+                    <button class="add-to-cart-btn" data-name="Panino Falafel" data-price="5.00">Aggiungi al Carrello</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Altri Piatti -->
+        <section id="other-dishes">
+            <h3>Altri Piatti</h3>
+            <div class="dish-grid">
+                <div class="dish-card" data-name="Piatto Falafel" data-price="5.00">
+                    <h4 class="dish-card-name">Piatto Falafel</h4>
+                    <p class="dish-card-price">€5.00</p>
+                    <button class="add-to-cart-btn" data-name="Piatto Falafel" data-price="5.00">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Insalata Mista" data-price="3.50">
+                    <h4 class="dish-card-name">Insalata Mista</h4>
+                    <p class="dish-card-price">€3.50</p>
+                    <button class="add-to-cart-btn" data-name="Insalata Mista" data-price="3.50">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Patatine Fritte" data-price="3.50" data-sizes='{"Piccolo":3.50,"Grande":5.00}'>
+                    <h4 class="dish-card-name">Patatine Fritte</h4>
+                    <p class="dish-card-price">€3.50</p>
+                    <select class="size-selector">
+                        <option value="Piccolo" data-price="3.50">Piccolo - €3.50</option>
+                        <option value="Grande" data-price="5.00">Grande - €5.00</option>
+                    </select>
+                    <button class="add-to-cart-btn" data-name="Patatine Fritte" data-price="3.50">Aggiungi al Carrello</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dolci -->
+        <section id="desserts">
+            <h3>Dolci</h3>
+            <div class="dish-grid">
+                <div class="dish-card" data-name="Baklava" data-price="4.50">
+                    <h4 class="dish-card-name">Baklava</h4>
+                    <p class="dish-card-price">€4.50</p>
+                    <button class="add-to-cart-btn" data-name="Baklava" data-price="4.50">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Nutella con Panino" data-price="2.00">
+                    <h4 class="dish-card-name">Nutella con Panino</h4>
+                    <p class="dish-card-price">€2.00</p>
+                    <button class="add-to-cart-btn" data-name="Nutella con Panino" data-price="2.00">Aggiungi al Carrello</button>
+                </div>
+                <div class="dish-card" data-name="Nutella con Piadina" data-price="3.00">
+                    <h4 class="dish-card-name">Nutella con Piadina</h4>
+                    <p class="dish-card-price">€3.00</p>
+                    <button class="add-to-cart-btn" data-name="Nutella con Piadina" data-price="3.00">Aggiungi al Carrello</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="offerte">
+            <h2>Offerte Speciali:</h2>
+        <ul>
+            <li id="wed-offer-link" style="cursor:pointer;">Il mercoledì i panini sono ridotti da €5.00 a €4.50!</li>
+        </ul>
+        </section>
+        <h2>Contattaci</h2>
+        <p style="font-size:18px; font-weight:700; color:var(--olive, #344E41);">📞 <a href="tel:+3900393290494565" style="color:inherit; text-decoration:none;">00393290494565</a></p>
+        <h2>Social Media</h2>
+        <p style="font-size:18px; font-weight:700; color:var(--tomato, #A52824);">🎵 TikTok: <a href="https://www.tiktok.com/@aligujjar802" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">ALI 🥂KEBABBARO</a></p>
+    </div>
+
+    <!-- Floating Cart Button -->
+    <button id="floating-cart-btn" class="floating-cart-btn" aria-label="Carrello">
+        <span class="cart-icon">🛒</span>
+        <span class="cart-count" id="floating-cart-count">0</span>
+        <span class="cart-total" id="floating-cart-total">€0.00</span>
+        <span style="font-size:10px;vertical-align:super;">* consegna minima 15 €</span>
+    </button>
+
+    <!-- Order Modal -->
+    <div id="order-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" id="modal-close">&times;</span>
+            <h3 id="modal-dish-name"></h3>
+            <p id="modal-unit-price"></p>
+            <label class="modal-label">Quantità:</label>
+            <div class="qty-selector">
+                <button class="qty-btn" id="qty-minus">-</button>
+                <input type="number" id="qty-input" value="1" min="1" max="99">
+                <button class="qty-btn" id="qty-plus">+</button>
+            </div>
+            <label class="modal-label">Richieste Speciali:</label>
+            <textarea id="special-requests" class="modal-textarea" placeholder="es. senza cipolla, salsa extra..."></textarea>
+            <div class="modal-buttons">
+                <button class="modal-cancel" id="modal-cancel">Annulla</button>
+                <button class="modal-add" id="modal-add">Aggiungi al Carrello</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content cart-modal-content">
+            <div class="cart-modal-header">
+                <h3>Il Tuo Carrello</h3>
+                <button class="modal-close" id="cart-modal-close">&times;</button>
+            </div>
+            <div id="cart-modal-list"></div>
+            <div class="cart-modal-footer">
+                <div class="cart-modal-subtotal">Subtotale: <span id="cart-modal-subtotal">€0.00</span></div>
+                <button id="cart-modal-checkout" class="checkout-btn">Procedi al Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content" style="max-width:540px;">
+            <span class="modal-close" id="checkout-close">&times;</span>
+            <h3>Checkout</h3>
+            <div id="checkout-summary"></div>
+            <div class="checkout-form">
+                <div class="form-group">
+                    <label class="modal-label">Tipo di Ordine</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="order_type" value="delivery" checked> Consegna</label>
+                        <label class="radio-label"><input type="radio" name="order_type" value="pickup"> Ritiro</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="modal-label" for="customer-name">Nome Completo *</label>
+                    <input type="text" id="customer-name" class="modal-textarea" style="min-height:auto;" placeholder="Il tuo nome">
+                </div>
+                <div class="form-group">
+                    <label class="modal-label" for="customer-phone">Numero di Telefono *</label>
+                    <input type="tel" id="customer-phone" class="modal-textarea" style="min-height:auto;" placeholder="(123) 456-7890">
+                </div>
+                <div class="form-group" id="address-group">
+                    <label class="modal-label">Consegna Address *</label>
+                    <p style="font-size:12px; color:#555; margin:4px 0;">Consegna solo a Poggio a Caiano</p>
+                    <input type="text" id="addr-street" class="modal-textarea" style="min-height:auto; margin-top:8px;" placeholder="Via">
+                    <input type="text" id="addr-city" class="modal-textarea" style="min-height:auto; margin-top:8px;" placeholder="Città">
+                    <input type="text" id="addr-postcode" class="modal-textarea" style="min-height:auto; margin-top:8px;" placeholder="CAP">
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer;">
+                            <input type="checkbox" id="save-address-check"> Salva questo indirizzo per dopo
+                        </label>
+                        <button type="button" id="open-saved-addresses-btn" class="modal-cancel" style="flex:none; padding:6px 12px; font-size:13px;">Indirizzi Salvati</button>
+                    </div>
+                    <div id="save-address-label-group" style="display:none; margin-top:8px;">
+                        <input type="text" id="address-label" class="modal-textarea" style="min-height:auto;" placeholder="Etichetta (es. Casa, Lavoro)">
+                    </div>
+                    <div id="saved-address-actions" style="display:none; margin-top:8px; gap:8px;">
+                        <button type="button" id="edit-address-btn" class="modal-cancel" style="flex:none; padding:6px 12px; font-size:13px;">Modifica</button>
+                        <button type="button" id="delete-address-btn" class="modal-cancel" style="flex:none; padding:6px 12px; font-size:13px;">Elimina</button>
+                    </div>
+                    <button type="button" id="clear-all-addresses-btn" class="modal-cancel" style="margin-top:8px; padding:6px 12px; font-size:13px; width:auto;">Clear All Indirizzi Salvati</button>
+                    <div id="delivery-distance-info" style="margin-top:8px; font-size:13px; color:#5a5040;"></div>
+                </div>
+                <div class="form-group">
+                    <label class="modal-label" for="order-notes">Note Ordine (opzionale)</label>
+                    <textarea id="order-notes" class="modal-textarea" placeholder="es. senza cipolla, salsa extra..."></textarea>
+                </div>
+            </div>
+            <div class="checkout-total">
+                <div>Subtotale: <span id="checkout-subtotal">€0.00</span></div>
+                <div>Consegna Fee: <span id="checkout-delivery">€0.00</span></div>
+                <div class="grand-total">Total: <span id="checkout-grand-total">€0.00</span></div>
+            </div>
+            <div id="checkout-status" class="checkout-status"></div>
+            <div id="min-order-msg" class="checkout-status error" style="display:none;"></div>
+            <div class="modal-buttons">
+                <button class="modal-cancel" id="checkout-back">Indietro</button>
+                <button class="modal-add" id="checkout-submit" style="flex:2;">Invia Ordine</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indirizzi Salvati Modal -->
+    <div id="saved-addresses-modal" class="modal">
+        <div class="modal-content" style="max-width:500px;">
+            <div class="cart-modal-header">
+                <h3>Indirizzi Salvati</h3>
+                <button class="modal-close" id="saved-addresses-close">&times;</button>
+            </div>
+            <div id="saved-addresses-list" style="margin:12px 0;"></div>
+            <div class="checkout-form">
+                <div class="form-group">
+                    <label class="modal-label" for="new-addr-label">Label</label>
+                    <input type="text" id="new-addr-label" class="modal-textarea" style="min-height:auto;" placeholder="e.g. Home, Work">
+                </div>
+                <div class="form-group">
+                    <label class="modal-label" for="new-addr-street">Via</label>
+                    <input type="text" id="new-addr-street" class="modal-textarea" style="min-height:auto;" placeholder="Via">
+                </div>
+                <div class="form-group">
+                    <label class="modal-label" for="new-addr-city">Città</label>
+                    <input type="text" id="new-addr-city" class="modal-textarea" style="min-height:auto;" placeholder="Città">
+                </div>
+                <div class="form-group">
+                    <label class="modal-label" for="new-addr-postcode">CAP</label>
+                    <input type="text" id="new-addr-postcode" class="modal-textarea" style="min-height:auto;" placeholder="CAP">
+                </div>
+                <div class="form-group">
+                    <label class="modal-label" for="new-addr-phone">Telefono</label>
+                    <input type="tel" id="new-addr-phone" class="modal-textarea" style="min-height:auto;" placeholder="Telefono">
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-cancel" id="saved-addresses-cancel">Chiudi</button>
+                <button class="modal-add" id="saved-addresses-add">Aggiungi Indirizzo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content" style="max-width:440px; text-align:center;">
+            <div class="confirm-icon" id="confirm-icon">✓</div>
+            <h3 id="confirm-title">Ordine Confermato!</h3>
+            <p id="confirm-message"></p>
+            <button class="modal-add" id="confirm-ok" style="margin:0 auto;">Fatto</button>
+        </div>
+    </div>
+
+
+    <!-- Wednesday Promotion Popup -->
+    <div id="promo-popup" class="promo-popup">
+        <div class="promo-popup-content">
+            <button class="promo-close" id="promo-close">&times;</button>
+            <h2>🍀 È il tuo giorno fortunato!</h2>
+            <p>È mercoledì! Approfitta della nostra offerta speciale a soli €4.50!</p>
+            <button class="promo-btn" id="promo-btn">Andiamo!</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
