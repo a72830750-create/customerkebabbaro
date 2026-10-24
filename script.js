@@ -166,6 +166,23 @@ function closeCheckoutModal() {
     checkoutStatus.textContent = '';
 }
 
+
+async function geocode(q) {
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q));
+    const j = await r.json();
+    if (j && j[0]) return { lat: +j[0].lat, lon: +j[0].lon };
+  } catch(e) {}
+  return null;
+}
+function distKm(a,b) {
+  const R=6371;
+  const dLat=(b.lat-a.lat)*Math.PI/180;
+  const dLon=(b.lon-a.lon)*Math.PI/180;
+  const x=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+
 async function submitOrder() {
     const name = document.getElementById('customer-name').value.trim();
     const phone = document.getElementById('customer-phone').value.trim();
@@ -179,6 +196,12 @@ async function submitOrder() {
     if (orderType === 'delivery' && getCartTotal() < 15) { checkoutStatus.textContent = 'Ordine minimo per consegna: €15.00.'; checkoutStatus.className = 'checkout-status error'; return; }
     if (!name || !phone) { checkoutStatus.textContent = 'Compila nome e telefono.'; checkoutStatus.className = 'checkout-status error'; return; }
     if (orderType === 'delivery' && !address) { checkoutStatus.textContent = 'Inserisci indirizzo di consegna.'; checkoutStatus.className = 'checkout-status error'; return; }
+    if (orderType === 'delivery') {
+      const c = await geocode(address);
+      const base = await geocode('Poggio a Caiano, Tuscany, Italy');
+      if (!c || !base) { checkoutStatus.textContent = 'Indirizzo non valido o non trovato.'; checkoutStatus.className = 'checkout-status error'; return; }
+      if (distKm(c, base) > 5) { checkoutStatus.textContent = 'Indirizzo troppo lontano (max 5 km).'; checkoutStatus.className = 'checkout-status error'; return; }
+    }
 
     // Save address if checkbox checked
     const saveCheck = document.getElementById('save-address-check');
