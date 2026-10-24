@@ -173,7 +173,6 @@ async function submitOrder() {
     const city = document.getElementById('addr-city')?.value.trim() || '';
     const postcode = document.getElementById('addr-postcode')?.value.trim() || '';
     const address = [street, city, postcode].filter(Boolean).join(', ');
-    const selectedAddr = document.getElementById('saved-address-select')?.value;
     const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'delivery';
     const notes = document.getElementById('order-notes').value.trim();
 
@@ -185,11 +184,6 @@ async function submitOrder() {
     const saveCheck = document.getElementById('save-address-check');
     if (saveCheck && saveCheck.checked) {
         const label = document.getElementById('address-label').value.trim() || 'Indirizzo';
-        const street = document.getElementById('addr-street').value.trim();
-        const city = document.getElementById('addr-city').value.trim();
-        const postcode = document.getElementById('addr-postcode').value.trim();
-        const address = [street, city, postcode].filter(Boolean).join(', ');
-        const phone = document.getElementById('customer-phone').value.trim();
         if (address) {
             const addrs = getSavedAddresses();
             addrs.push({ label, address, phone });
@@ -198,7 +192,7 @@ async function submitOrder() {
         }
     }
 
-    const summary = cart.map(i => i.name + ' (x' + i.qty + ') - €' + (i.price * i.qty).toFixed(2)).join('\\n');
+    const summary = cart.map(i => i.name + ' (x' + i.qty + ') - €' + (i.price * i.qty).toFixed(2)).join('\n');
     const deliveryFee = 0.00;
     const total = getCartTotal() + deliveryFee;
     const order = {
@@ -206,16 +200,22 @@ async function submitOrder() {
       order_type: orderType,
       customer_name: name,
       customer_phone: phone,
-      delivery_address: orderType==='delivery'? address : null,
+      delivery_address: orderType === 'delivery' ? address : null,
       notes: notes,
       subtotal: getCartTotal(),
       delivery_fee: deliveryFee,
       total: total,
-      items: cart.map(i=>({name:i.name, qty:i.qty, price:i.price}))
+      items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price }))
     };
 
     try {
-      const resp = await fetch((window.API_BASE||'') + '/api/orders', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(order)});
+      // Automatically fallback to Render backend if window.API_BASE is missing
+      const API_URL = window.API_BASE || 'https://backend-1-osni.onrender.com';
+      const resp = await fetch(API_URL + '/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(order)
+      });
       if (!resp.ok) throw new Error('fail');
     } catch(e) {
       checkoutStatus.textContent = 'Ordine non inviato. Il server è attivo?';
@@ -251,7 +251,6 @@ function closeConfirmModal() {
     window.location.reload();
 }
 
-
 // ===== Wednesday Promotion Popup =====
 function isWednesday() {
     const now = new Date();
@@ -265,15 +264,12 @@ function showPromoPopup() {
     const btn = document.getElementById('promo-btn');
     if (!popup) return;
 
-    // Check if already shown today
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' });
     if (localStorage.getItem('promo_shown_date') === today) return;
 
-    // Show popup
     popup.classList.add('show');
     localStorage.setItem('promo_shown_date', today);
 
-    // Close handlers
     if (closeBtn) closeBtn.onclick = function() { popup.classList.remove('show'); };
     if (btn) btn.onclick = function() {
         popup.classList.remove('show');
@@ -287,15 +283,11 @@ function showPromoPopup() {
     popup.onclick = function(e) { if (e.target === popup) popup.classList.remove('show'); };
 }
 
-// Show popup on load if Wednesday
 if (isWednesday()) {
     setTimeout(showPromoPopup, 500);
 }
 
-
 // ===== Saved Addresses =====
-const RESTAURANT_ADDRESS = 'Via Lorenzo il Magnifico 42, Poggio a Caiano, Tuscany, Italy';
-
 function getSavedAddresses() {
     try { return JSON.parse(localStorage.getItem('forno99_addresses') || '[]'); }
     catch { return []; }
@@ -364,17 +356,6 @@ function populateAddressDropdown() {
     });
 }
 
-function calculateDeliveryFee(address) {
-    // Mock distance calculation - in production use a routing service
-    // For now, return a default fee
-    const info = document.getElementById('delivery-distance-info');
-    if (info) info.textContent = 'Distanza calcolata dal ristorante: ' + RESTAURANT_ADDRESS;
-    // Default to 15 euro (up to 3km)
-    return 15.00;
-}
-
-
-
 const qn = document.querySelector('.quick-nav');
 let qnTop = qn ? qn.offsetTop : 0;
 window.addEventListener('scroll', function() {
@@ -382,14 +363,13 @@ window.addEventListener('scroll', function() {
     if (window.scrollY > qnTop) qn.classList.add('fixed');
     else qn.classList.remove('fixed');
 });
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', function() {
-    // Quick nav buttons
     document.querySelectorAll('.quick-nav-btn').forEach(btn => {
         btn.addEventListener('click', function() { scrollToSection(this.dataset.target); });
     });
 
-    // Dish cards - click card or button opens modal
     document.querySelectorAll('.dish-card').forEach(card => {
         card.addEventListener('click', function(e) {
             if (e.target.closest('.add-to-cart-btn')) return;
@@ -404,7 +384,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Size selector change - update price display and button data-price
     document.querySelectorAll('.size-selector').forEach(sel => {
         sel.addEventListener('change', function() {
             const card = this.closest('.dish-card');
@@ -414,17 +393,14 @@ document.addEventListener('DOMContentLoaded', function() {
             card.querySelector('.dish-card-price').textContent = '€' + price.toFixed(2);
             const btn = card.querySelector('.add-to-cart-btn');
             btn.dataset.price = price.toFixed(2);
-            // Update name to include size
             btn.dataset.name = card.dataset.name + ' (' + this.value + ')';
         });
     });
 
-    // Initialize size selectors - trigger change to set correct initial state
     document.querySelectorAll('.size-selector').forEach(sel => {
         sel.dispatchEvent(new Event('change'));
     });
 
-    // Modal controls
     if (modalAdd) modalAdd.addEventListener('click', function() {
         if (!currentDish) return;
         const qty = parseInt(qtyInput.value, 10) || 1;
@@ -438,21 +414,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (qtyMinus) qtyMinus.addEventListener('click', function() { qtyInput.value = Math.max(1, parseInt(qtyInput.value) - 1); });
     if (qtyPlus) qtyPlus.addEventListener('click', function() { qtyInput.value = parseInt(qtyInput.value) + 1; });
 
-    // Floating cart button
     if (floatingCartBtn) floatingCartBtn.addEventListener('click', openCartModal);
 
-    // Cart modal
     if (cartModalClose) cartModalClose.addEventListener('click', closeCartModal);
     if (cartModalCheckout) cartModalCheckout.addEventListener('click', openCheckoutModal);
     if (cartModal) cartModal.addEventListener('click', function(e) { if (e.target === cartModal) closeCartModal(); });
 
-    // Checkout modal
     if (checkoutClose) checkoutClose.addEventListener('click', closeCheckoutModal);
     if (checkoutBack) checkoutBack.addEventListener('click', closeCheckoutModal);
     if (checkoutSubmit) checkoutSubmit.addEventListener('click', submitOrder);
     if (checkoutModal) checkoutModal.addEventListener('click', function(e) { if (e.target === checkoutModal) closeCheckoutModal(); });
 
-    // Order type radio
     document.querySelectorAll('input[name="order_type"]').forEach(radio => {
         radio.addEventListener('change', function() {
             if (addressGroup) addressGroup.style.display = this.value === 'delivery' ? 'block' : 'none';
@@ -473,13 +445,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Saved address selection
     const addrSelect = document.getElementById('saved-address-select');
     if (addrSelect) {
         addrSelect.addEventListener('change', function() {
             const addrs = getSavedAddresses();
             const idx = parseInt(this.value);
-                    const saveGroup = document.getElementById('save-address-label-group');
+            const saveGroup = document.getElementById('save-address-label-group');
             const actions = document.getElementById('saved-address-actions');
             if (this.value === '') {
                 document.getElementById('addr-street').value = '';
@@ -498,7 +469,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Save address checkbox
     const saveCheck = document.getElementById('save-address-check');
     if (saveCheck) {
         saveCheck.addEventListener('change', function() {
@@ -507,66 +477,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Edit address button
-    const editBtn = document.getElementById('edit-address-btn');
-    if (editBtn) {
-        editBtn.addEventListener('click', function() {
-            const sel = document.getElementById('saved-address-select');
-            const idx = parseInt(sel.value);
-            const addrs = getSavedAddresses();
-            if (!isNaN(idx) && addrs[idx]) {
-                const label = prompt('Nuova etichetta:', addrs[idx].label);
-                if (label) {
-                    addrs[idx].label = label;
-                    const s = document.getElementById('addr-street').value.trim();
-                    const c = document.getElementById('addr-city').value.trim();
-                    const p = document.getElementById('addr-postcode').value.trim();
-                    addrs[idx].address = [s, c, p].filter(Boolean).join(', ');
-                    saveSavedAddresses(addrs);
-                    populateAddressDropdown();
-                    sel.value = idx;
-                }
-            }
-        });
-    }
-
-    // Delete address button
-    const delBtn = document.getElementById('delete-address-btn');
-    if (delBtn) {
-        delBtn.addEventListener('click', function() {
-            const sel = document.getElementById('saved-address-select');
-            const idx = parseInt(sel.value);
-            if (!isNaN(idx)) {
-                let addrs = getSavedAddresses();
-                addrs = addrs.filter((_, i) => i !== idx);
-                saveSavedAddresses(addrs);
-                populateAddressDropdown();
-                document.getElementById('addr-street').value = '';
-                document.getElementById('addr-city').value = '';
-                document.getElementById('addr-postcode').value = '';
-                document.getElementById('saved-address-actions').style.display = 'none';
-            }
-        });
-    }
-
-
-
-    // Clear all addresses button
-    const clearAllBtn = document.getElementById('clear-all-addresses-btn');
-    if (clearAllBtn) {
-        clearAllBtn.addEventListener('click', function() {
-            if (confirm('Eliminare tutti gli indirizzi salvati?')) {
-                localStorage.removeItem('forno99_addresses');
-                populateAddressDropdown();
-                document.getElementById('addr-street').value = '';
-                document.getElementById('addr-city').value = '';
-                document.getElementById('addr-postcode').value = '';
-                document.getElementById('saved-address-actions').style.display = 'none';
-            }
-        });
-    }
-
-    // Open saved addresses popup
     const openSavedBtn = document.getElementById('open-saved-addresses-btn');
     if (openSavedBtn) openSavedBtn.addEventListener('click', openSavedAddressesModal);
     const savedClose = document.getElementById('saved-addresses-close');
@@ -575,26 +485,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (savedCancel) savedCancel.addEventListener('click', closeSavedAddressesModal);
     const savedModal = document.getElementById('saved-addresses-modal');
     if (savedModal) savedModal.addEventListener('click', function(e) { if (e.target === savedModal) closeSavedAddressesModal(); });
-    const savedAdd = document.getElementById('saved-addresses-add');
-    if (savedAdd) savedAdd.addEventListener('click', function() {
-        const label = document.getElementById('new-addr-label').value.trim() || 'Indirizzo';
-        const street = document.getElementById('new-addr-street').value.trim();
-        const city = document.getElementById('new-addr-city').value.trim();
-        const postcode = document.getElementById('new-addr-postcode').value.trim();
-        const phone = document.getElementById('new-addr-phone').value.trim();
-        const address = [street, city, postcode].filter(Boolean).join(', ');
-        if (!address) return;
-        const addrs = getSavedAddresses();
-        addrs.push({ label, address, phone });
-        saveSavedAddresses(addrs);
-        document.getElementById('new-addr-label').value = '';
-        document.getElementById('new-addr-street').value = '';
-        document.getElementById('new-addr-city').value = '';
-        document.getElementById('new-addr-postcode').value = '';
-        document.getElementById('new-addr-phone').value = '';
-        renderSavedAddressesList();
-        populateAddressDropdown();
-    });
+
     if (confirmOk) confirmOk.addEventListener('click', closeConfirmModal);
     if (confirmModal) confirmModal.addEventListener('click', function(e) { if (e.target === confirmModal) closeConfirmModal(); });
 
@@ -612,23 +503,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Offer link click
-    const offerLink = document.getElementById('wed-offer-link');
-    if (offerLink) {
-        offerLink.addEventListener('click', function() {
-            if (!isWednesday()) {
-                alert('Spiacenti, l\'offerta è disponibile solo il mercoledì.');
-            } else {
-                scrollToSection('sandwiches-wraps');
-                const card = document.querySelector('.dish-card[data-name="Panino Kebab"]');
-                if (card) {
-                    card.classList.add('promo-highlight');
-                    setTimeout(() => card.classList.remove('promo-highlight'), 3000);
-                }
-            }
-        });
-    }
-
-    // Initial UI
     updateCartUI();
 });
