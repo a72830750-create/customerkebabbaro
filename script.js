@@ -197,10 +197,11 @@ async function submitOrder() {
     if (!name || !phone) { checkoutStatus.textContent = 'Compila nome e telefono.'; checkoutStatus.className = 'checkout-status error'; return; }
     if (orderType === 'delivery' && !address) { checkoutStatus.textContent = 'Inserisci indirizzo di consegna.'; checkoutStatus.className = 'checkout-status error'; return; }
     if (orderType === 'delivery') {
-      const c = await geocode(address);
-      const base = await geocode('Poggio a Caiano, Tuscany, Italy');
-      if (!c || !base) { checkoutStatus.textContent = 'Indirizzo non valido o non trovato.'; checkoutStatus.className = 'checkout-status error'; return; }
-      if (distKm(c, base) > 5) { checkoutStatus.textContent = 'Indirizzo troppo lontano (max 5 km).'; checkoutStatus.className = 'checkout-status error'; return; }
+      if (!address.toLowerCase().includes('poggio a caiano')) {
+        checkoutStatus.textContent = 'Non consegniamo fuori da Poggio a Caiano.';
+        checkoutStatus.className = 'checkout-status error';
+        return;
+      }
     }
 
     // Save address if checkbox checked
