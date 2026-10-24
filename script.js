@@ -210,7 +210,7 @@ async function submitOrder() {
 
     try {
       // Automatically fallback to Render backend if window.API_BASE is missing
-      const API_URL = window.API_BASE || 'https://backend-1-osni.onrender.com';
+      const API_URL = 'https://backend-1-osni.onrender.com';
       const resp = await fetch(API_URL + '/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
