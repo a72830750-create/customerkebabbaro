@@ -519,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.dish-card').forEach(card=>{
         var name=card.dataset.name||'food';
         var img=document.createElement('img');
-        img.src='https://picsum.photos/seed/'+encodeURIComponent(name)+"/400/300";
+        img.src='https://loremflickr.com/400/300/kebab,food?lock='+ (card.dataset.name||'').length;
         img.alt=name;
         img.style.width='100%';
         img.style.height='140px';
