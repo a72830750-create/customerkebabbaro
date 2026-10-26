@@ -154,6 +154,7 @@
     </div>
 
     <!-- Floating Cart Button -->
+    <button id="my-order-btn" style="position:fixed;bottom:80px;right:20px;z-index:9999;">My Order</button>
     <button id="floating-cart-btn" class="floating-cart-btn" aria-label="Apri carrello">
         <span class="cart-icon">🛒</span>
         <span class="cart-count" id="floating-cart-count">0</span>
@@ -479,5 +480,7 @@ setInterval(checkOrdersOpen,30000);
 <script>
 (function(){const now=new Date();const rome=new Date(now.toLocaleString("en-US",{timeZone:"Europe/Rome"}));const target=new Date(rome);target.setHours(23,0,0,0);if(target<=rome)target.setDate(target.getDate()+1);setTimeout(()=>location.reload(),target.getTime()-rome.getTime());})();
 </script>
+
+<div id="my-order-modal" class="modal"><div class="modal-content"><h3>Order Status</h3><div id="my-order-status"></div></div></div>
 </body>
 </html>
