@@ -519,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.dish-card').forEach(card=>{
         var name=card.dataset.name||'food';
         var img=document.createElement('img');
-        img.src='https://loremflickr.com/400/300/'+encodeURIComponent(name);
+        img.src='https://placehold.co/400x300?text='+encodeURIComponent(name);
         img.alt=name;
         img.style.width='100%';
         img.style.height='140px';
