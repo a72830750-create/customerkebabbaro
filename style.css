@@ -842,3 +842,7 @@ section[id] h3::after {
 .checkout-status.error { color: var(--primary); font-weight: 600; }
 .modal-add { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 700; }
 .modal-cancel { background: #fff; border: 1px solid var(--border); padding: 10px 16px; border-radius: 8px; }
+
+.qty-selector { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.qty-btn { background: var(--primary); color: #fff; border: none; width: 36px; height: 36px; border-radius: 8px; font-weight: 700; }
+#qty-input { width: 60px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; text-align: center; }
