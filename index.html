@@ -462,7 +462,7 @@
     <script src="script.js"></script>
 
 <script>
-function buildTimes(selId){const sel=document.getElementById(selId);if(!sel)return;sel.innerHTML="";const now=new Date();const start=new Date(now.getTime()+45*60000);start.setMinutes(Math.ceil(start.getMinutes()/15)*15,0,0);const close=new Date(now);close.setHours(23,0,0,0);for(let t=new Date(start);t<=close;t=new Date(t.getTime()+15*60000)){const v=t.toTimeString().slice(0,5);const o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o);}}
+function buildTimes(selId){const sel=document.getElementById(selId);if(!sel)return;sel.innerHTML="";const now=new Date();const romeNow=new Date(now.toLocaleString("en-US",{timeZone:"Europe/Rome"}));const start=new Date(romeNow.getTime()+45*60000);start.setMinutes(Math.ceil(start.getMinutes()/15)*15,0,0);const close=new Date(romeNow);close.setHours(23,0,0,0);let dayOffset=0;if(start>close){dayOffset=1;start.setDate(start.getDate()+1);start.setHours(11,0,0,0);}const end=new Date(start);end.setHours(23,0,0,0);for(let t=new Date(start);t<=end;t=new Date(t.getTime()+15*60000)){const v=t.toTimeString().slice(0,5);const d=t.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"});const o=document.createElement("option");o.value=v;o.textContent=d+" "+v;sel.appendChild(o);}}
 buildTimes("delivery-time");buildTimes("pickup-time");
 </script>
 
