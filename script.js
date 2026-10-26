@@ -244,8 +244,8 @@ async function submitOrder() {
     if (!name || !phone) { if (checkoutStatus) { checkoutStatus.textContent = 'Compila nome e telefono.'; checkoutStatus.className = 'checkout-status error'; } return; }
     if (orderType === 'delivery' && !address) { if (checkoutStatus) { checkoutStatus.textContent = 'Inserisci indirizzo di consegna.'; checkoutStatus.className = 'checkout-status error'; } return; }
     if (orderType === 'delivery') {
-        if (!address.toLowerCase().includes('poggio a caiano')) {
-            if (checkoutStatus) { checkoutStatus.textContent = 'Non consegniamo fuori da Poggio a Caiano.'; checkoutStatus.className = 'checkout-status error'; }
+        if (!address.toLowerCase().includes('pescia')) {
+            if (checkoutStatus) { checkoutStatus.textContent = 'Non consegniamo fuori da pescia.'; checkoutStatus.className = 'checkout-status error'; }
             return;
         }
     }
