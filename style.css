@@ -863,3 +863,9 @@ section[id] h3::after {
 .cart-modal-line { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
 .cart-modal-line-info { display: flex; flex-direction: column; gap: 2px; }
+
+.radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.radio-group .radio-label { background: #fff; border: 1.5px solid var(--border); padding: 10px 14px; border-radius: 8px; cursor: pointer; }
+.radio-group input:checked + * { } 
+.radio-group .radio-label:has(input:checked) { background: var(--primary); color: #fff; border-color: var(--primary); }
+.radio-group input { display: none; }
