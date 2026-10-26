@@ -360,6 +360,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch(e) { cart = []; }
 
     initQuickNavActive();
+    const mob=document.getElementById("my-order-btn"); if(mob) mob.addEventListener("click", showMyOrder);
 
 function showMyOrder(){const num=localStorage.getItem("faridkebab_last_order");if(!num)return;const el=document.getElementById("my-order-status");fetch("https://backend-1-osni.onrender.com/api/orders/lookup/"+num).then(r=>r.json()).then(d=>{if(el)el.textContent=d.order_number+": "+d.status;});}
 setInterval(showMyOrder,10000);
