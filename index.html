@@ -401,7 +401,8 @@
         var h=v.slice(0,2), m=v.slice(2,4);
         if(h.length===2){ var hi=parseInt(h,10); if(hi>12) h='12'; }
         if(m.length===2){ var mi=parseInt(m,10); if(mi>59) m='59'; }
-        el.value = (h+(m?':'+m:''));
+        el.value = h + ':' + (m||'');
+        if(el.value.length<3) el.value='00:00'.slice(0,el.value.length+ (el.value.indexOf(':')===-1?1:0));
       });
     })();
     </script>
