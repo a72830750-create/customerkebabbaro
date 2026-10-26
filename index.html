@@ -475,5 +475,9 @@ async function checkOrdersOpen(){try{const r=await fetch("https://backend-1-osni
 checkOrdersOpen();
 setInterval(checkOrdersOpen,30000);
 </script>
+
+<script>
+(function(){const now=new Date();const rome=new Date(now.toLocaleString("en-US",{timeZone:"Europe/Rome"}));const target=new Date(rome);target.setHours(23,0,0,0);if(target<=rome)target.setDate(target.getDate()+1);setTimeout(()=>location.reload(),target.getTime()-rome.getTime());})();
+</script>
 </body>
 </html>
