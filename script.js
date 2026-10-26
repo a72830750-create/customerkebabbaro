@@ -513,3 +513,19 @@ function initFixedFallback() {
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initFixedFallback);
 else initFixedFallback();
+
+
+document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.dish-card').forEach(card=>{
+        var name=card.dataset.name||'food';
+        var img=document.createElement('img');
+        img.src='https://source.unsplash.com/400x300/?kebab,food,'+encodeURIComponent(name);
+        img.alt=name;
+        img.style.width='100%';
+        img.style.height='140px';
+        img.style.objectFit='cover';
+        img.style.borderRadius='8px';
+        img.style.marginBottom='8px';
+        card.insertBefore(img, card.firstChild);
+    });
+});
