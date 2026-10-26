@@ -515,11 +515,45 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 else initFixedFallback();
 
 
+
+var IMGMAP = {
+ "Panino kebab":"https://commons.wikimedia.org/wiki/Special:FilePath/Doener%20Kebab%20(9682662957).jpg",
+ "Piadina kebab":"https://commons.wikimedia.org/wiki/Special:FilePath/D%C3%B6ner%20Kebab%20Wrap%20-%20What%20The%20Pitta.jpg",
+ "Seek kebab":"https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20suya%20also%20known%20as%20kebab.jpg",
+ "Hot dog":"https://commons.wikimedia.org/wiki/Special:FilePath/Hot%20dog.jpg",
+ "Panino falafel":"https://commons.wikimedia.org/wiki/Special:FilePath/Falafel%20Sandwich.JPG",
+ "Panino con hamburger":"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
+ "Alette di pollo":"https://images.unsplash.com/photo-1527477396000-e27163b481c2?auto=format&fit=crop&w=800&q=80",
+ "Anelli di cipolla":"https://commons.wikimedia.org/wiki/Special:FilePath/Onion%20Rings.jpg",
+ "Nuggets di pollo":"https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80",
+ "Menu piadina kebab, patatine e bevanda":"https://commons.wikimedia.org/wiki/Special:FilePath/D%C3%B6ner%20Kebab%20Wrap%20-%20What%20The%20Pitta.jpg",
+ "Menu cottoletta pollo, patatine e bevanda":"https://images.unsplash.com/photo-1606755962773-d324e0a13086?auto=format&fit=crop&w=800&q=80",
+ "Menu panino kebab, patatine e bevanda":"https://commons.wikimedia.org/wiki/Special:FilePath/Doener%20Kebab%20(9682662957).jpg",
+ "Menu panino hamburger, patatine e bevanda":"https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=800&q=80",
+ "Menu hot dog, patatine e bevanda":"https://commons.wikimedia.org/wiki/Special:FilePath/Hot%20dog.jpg",
+ "Menu alette di pollo, patatine e bevanda":"https://images.unsplash.com/photo-1527477396000-e27163b481c2?auto=format&fit=crop&w=800&q=80",
+ "Nuggets, patatine e bevanda":"https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80",
+ "Vaschetta solo carne piccola":"https://commons.wikimedia.org/wiki/Special:FilePath/D%C3%B6ner%20Kebab%20auf%20Teller.jpg",
+ "Vaschetta solo carne media":"https://commons.wikimedia.org/wiki/Special:FilePath/D%C3%B6ner%20Kebab%20auf%20Teller.jpg",
+ "Vaschetta solo carne grande":"https://commons.wikimedia.org/wiki/Special:FilePath/D%C3%B6ner%20Kebab%20auf%20Teller.jpg",
+ "Patatine Piccole":"https://commons.wikimedia.org/wiki/Special:FilePath/French%20Fries.jpg",
+ "Patatine Medie":"https://commons.wikimedia.org/wiki/Special:FilePath/French%20Fries.jpg",
+ "Patatine Grandi":"https://commons.wikimedia.org/wiki/Special:FilePath/French%20Fries.jpg",
+ "Baklava":"https://commons.wikimedia.org/wiki/Special:FilePath/Baklava%20and%20breads.jpg",
+ "Coca-Cola Zero 33cl":"https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=500&q=80",
+ "Coca-Cola 33cl":"https://images.unsplash.com/photo-1554866585-cd94860890b7?auto=format&fit=crop&w=500&q=80",
+ "Fanta 33cl":"https://images.unsplash.com/photo-1624517452488-04869289c4ca?auto=format&fit=crop&w=500&q=80",
+ "Acqua naturale 50cl":"https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=500&q=80",
+ "Acqua Frizante 50cl":"https://images.unsplash.com/photo-1606168094336-48f205276929?auto=format&fit=crop&w=500&q=80",
+ "Monster energy drinks":"https://images.unsplash.com/photo-1622543925917-763c34d1a86e?auto=format&fit=crop&w=500&q=80"
+};
 document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.dish-card').forEach(card=>{
-        var name=card.dataset.name||'food';
+        var name=card.dataset.name;
+        var url=IMGMAP[name];
+        if(!url) return;
         var img=document.createElement('img');
-        img.src='https://placehold.co/400x300?text='+encodeURIComponent(name);
+        img.src=url;
         img.alt=name;
         img.style.width='100%';
         img.style.height='140px';
