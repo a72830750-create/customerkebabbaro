@@ -871,3 +871,5 @@ section[id] h3::after {
 .radio-group input { display: none; }
 
 .radio-group .radio-label { padding: 6px 20px; font-size: 13px; }
+
+.qty-selector { flex-direction: column; align-items: flex-start; }
