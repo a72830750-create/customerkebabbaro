@@ -290,6 +290,7 @@ async function submitOrder() {
     if (confirmMessage) confirmMessage.textContent = 'Grazie, ' + name + '!\n\n' + summary + '\n\nTotal: €' + total.toFixed(2) + '\n' + (orderType === 'delivery' ? 'Consegna a: ' + address : 'Ritiro') + (notes ? '\nNote: ' + notes : '');
     if (confirmModal) confirmModal.classList.add('show');
 
+    localStorage.setItem("faridkebab_last_order", order.order_number);
     cart = [];
     saveCart();
     updateCartUI();
