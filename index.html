@@ -467,7 +467,7 @@ buildTimes("delivery-time");buildTimes("pickup-time");
 </script>
 
 <script>
-(function(){const now=new Date();const rome=new Date(now.toLocaleString("en-US",{timeZone:"Europe/Rome"}));const close=new Date(rome);close.setHours(23,0,0,0);if(rome.getTime()>=close.getTime()-15*60000){document.body.insertAdjacentHTML("beforeend","<div style="position:fixed;bottom:0;left:0;right:0;background:#000;color:#fff;text-align:center;padding:12px;font-weight:bold;">Ristorante chiuso per oggi</div>");const btn=document.getElementById("checkout-submit");if(btn)btn.disabled=true;}
+(function(){const now=new Date();const rome=new Date(now.toLocaleString("en-US",{timeZone:"Europe/Rome"}));const close=new Date(rome);close.setHours(23,45,0,0);if(rome.getTime()>=close.getTime()-15*60000){document.body.insertAdjacentHTML("beforeend","<div style="position:fixed;bottom:0;left:0;right:0;background:#000;color:#fff;text-align:center;padding:12px;font-weight:bold;">Ristorante chiuso per oggi</div>");const btn=document.getElementById("checkout-submit");if(btn)btn.disabled=true;}
 })();
 </script>
 
