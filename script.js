@@ -560,6 +560,7 @@ document.addEventListener('DOMContentLoaded', function(){
         img.style.objectFit='cover';
         img.style.borderRadius='8px';
         img.style.marginBottom='8px';
+        img.referrerPolicy='no-referrer';
         card.insertBefore(img, card.firstChild);
     });
 });
