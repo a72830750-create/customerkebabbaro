@@ -295,10 +295,6 @@ async function submitOrder() {
     saveCart();
     updateCartUI();
     closeCheckoutModal();
-    const fcb=document.getElementById("floating-cart-btn");
-    if(fcb){ fcb.innerHTML='<span class="cart-icon">📋</span><span class="cart-total">My Order</span>'; fcb.onclick=function(){ showMyOrder(); };
-    }
-    showMyOrder();
 }
 
 function getSavedAddresses() {
