@@ -467,9 +467,9 @@ function buildTimes(selId){const sel=document.getElementById(selId);if(!sel)retu
 buildTimes("delivery-time");buildTimes("pickup-time");
 </script>
 
-<script>
+<!-- <script>
 (function(){const now=new Date();const parts=new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Rome",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(now);const h=parseInt(parts.find(p=>p.type==="hour").value,10);const m=parseInt(parts.find(p=>p.type==="minute").value,10);const mins=h*60+m;if(mins>=23*60 || mins<11*60){const b=document.createElement("div");b.textContent="Ristorante chiuso per oggi";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#000;color:#fff;text-align:center;padding:16px;font-weight:bold;z-index:9999;font-size:18px";document.body.appendChild(b);const btn=document.getElementById("checkout-submit");if(btn)btn.disabled=true;document.querySelectorAll(".add-to-cart-btn").forEach(b=>{b.disabled=true;b.style.opacity="0.5";});document.querySelectorAll(".dish-card").forEach(c=>{c.style.pointerEvents="none";c.style.opacity="0.6";});}})();
-</script>
+</script> -->
 
 <script>
 async function checkOrdersOpen(){try{const r=await fetch("https://backend-1-osni.onrender.com/api/settings");const d=await r.json();if(d.accepting_orders==="false"){const b=document.createElement("div");b.textContent="Orders are closed";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#000;color:#fff;text-align:center;padding:16px;font-weight:bold;z-index:9999;font-size:18px";document.body.appendChild(b);const btn=document.getElementById("checkout-submit");if(btn)btn.disabled=true;document.querySelectorAll(".add-to-cart-btn").forEach(b=>{b.disabled=true;b.style.opacity="0.5";});document.querySelectorAll(".dish-card").forEach(c=>{c.style.pointerEvents="none";c.style.opacity="0.6";});}}catch(e){}}
@@ -479,7 +479,7 @@ setInterval(checkOrdersOpen,30000);
 
 <script>
 (function(){const now=new Date();const rome=new Date(now.toLocaleString("en-US",{timeZone:"Europe/Rome"}));const target=new Date(rome);target.setHours(23,0,0,0);if(target<=rome)target.setDate(target.getDate()+1);setTimeout(()=>location.reload(),target.getTime()-rome.getTime());})();
-</script>
+</script> -->
 
 <div id="my-order-modal" class="modal"><div class="modal-content"><h3>Order Status</h3><div id="my-order-status"></div></div></div>
 </body>
