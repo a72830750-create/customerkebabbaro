@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    document.querySelectorAll('.dish-card').forEach(card => {
+    document.querySelectorAll('#menu .dish-card').forEach(card => {
         card.addEventListener('click', function(e) {
             if (e.target.closest('.add-to-cart-btn')) return;
             if (e.target.closest('.size-selector')) return;
@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (confirmModal) confirmModal.addEventListener('click', function(e) { if (e.target === confirmModal) closeConfirmModal(); });
 
     if (isWednesday()) {
-        document.querySelectorAll('.dish-card').forEach(card => {
+        document.querySelectorAll('#menu .dish-card').forEach(card => {
             if (card.dataset.name === 'Panino Kebab') {
                 card.dataset.price = '4.50';
                 const priceEl = card.querySelector('.dish-card-price');
@@ -548,7 +548,7 @@ var IMGMAP = {
  "Monster energy drinks":"https://images.unsplash.com/photo-1622543925917-763c34d1a86e?auto=format&fit=crop&w=500&q=80"
 };
 document.addEventListener('DOMContentLoaded', function(){
-    document.querySelectorAll('.dish-card').forEach(card=>{
+    document.querySelectorAll('#menu .dish-card').forEach(card=>{
         var name=card.dataset.name;
         var url=IMGMAP[name];
         if(!url) return;
