@@ -239,6 +239,9 @@ async function submitOrder() {
     const address = [street, city, postcode].filter(Boolean).join(', ');
     const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'delivery';
     const notes = document.getElementById('order-notes')?.value.trim() || '';
+    const deliveryTiming = document.querySelector('input[name="delivery_timing"]:checked')?.value || 'now';
+    const deliveryTime = document.getElementById('delivery-time')?.value || null;
+    const pickupTime = document.getElementById('pickup-time')?.value || null;
 
     if (orderType === 'delivery' && getCartTotal() < 15) { if (checkoutStatus) { checkoutStatus.textContent = 'Ordine minimo per consegna: €15.00.'; checkoutStatus.className = 'checkout-status error'; } return; }
     if (!name || !phone) { if (checkoutStatus) { checkoutStatus.textContent = 'Compila nome e telefono.'; checkoutStatus.className = 'checkout-status error'; } return; }
@@ -260,6 +263,9 @@ async function submitOrder() {
         customer_phone: phone,
         delivery_address: orderType === 'delivery' ? address : null,
         notes: notes,
+        delivery_timing: deliveryTiming,
+        delivery_time: deliveryTiming === 'later' ? deliveryTime : 'now',
+        pickup_time: orderType === 'pickup' ? pickupTime : null,
         subtotal: getCartTotal(),
         delivery_fee: deliveryFee,
         total: total,
