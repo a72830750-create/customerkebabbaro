@@ -292,10 +292,22 @@
                     <button type="button" id="clear-all-addresses-btn" class="modal-cancel" style="margin-top:8px; padding:6px 12px; font-size:13px; width:auto;">Clear All Indirizzi Salvati</button>
                     <div id="delivery-distance-info" style="margin-top:8px; font-size:13px; color:#5a5040;"></div>
                 </div>
+                <div class="form-group" id="pickup-time-group" style="display:none;">
+                    <label class="modal-label">Orario di Ritiro</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="pickup_timing" value="now" checked> Ritiro Ora</label>
+                        <label class="radio-label"><input type="radio" name="pickup_timing" value="later"> Ritiro Dopo</label>
+                    </div>
+                    <div id="custom-pickup-group" style="display:none; margin-top:8px;">
+                        <select id="pickup-time" class="modal-textarea" style="min-height:auto;">
+                        <option value="11:00">11:00</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="form-group">
                     <p style="font-size:13px; color:#555;">Pagamento solo in contanti: alla consegna o al ritiro.</p>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="delivery-time-group">
                     <label class="modal-label">Orario di Consegna</label>
                     <div class="radio-group">
                         <label class="radio-label"><input type="radio" name="delivery_timing" value="now" checked> Consegna Ora</label>
@@ -403,6 +415,29 @@
         el.value = h + ':' + (m||'');
         if(el.value.length<3) el.value='00:00'.slice(0,el.value.length+ (el.value.indexOf(':')===-1?1:0));
       });
+    })();
+    </script>
+    <script>
+    (function(){
+      function updateType(){
+        var t=document.querySelector('input[name="order_type"]:checked')?.value;
+        var dg=document.getElementById('delivery-time-group');
+        var pg=document.getElementById('pickup-time-group');
+        var ag=document.getElementById('address-group');
+        if(dg) dg.style.display = t==='delivery' ? 'block' : 'none';
+        if(pg) pg.style.display = t==='pickup' ? 'block' : 'none';
+        if(ag) ag.style.display = t==='delivery' ? 'block' : 'none';
+      }
+      document.addEventListener('change',function(e){
+        if(e.target && e.target.name==='order_type') updateType();
+        if(e.target && e.target.name==='delivery_timing'){
+          var g=document.getElementById('custom-time-group'); if(g) g.style.display=e.target.value==='later'?'block':'none';
+        }
+        if(e.target && e.target.name==='pickup_timing'){
+          var g=document.getElementById('custom-pickup-group'); if(g) g.style.display=e.target.value==='later'?'block':'none';
+        }
+      });
+      updateType();
     })();
     </script>
     <script src="script.js"></script>
