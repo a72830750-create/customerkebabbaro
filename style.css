@@ -846,3 +846,7 @@ section[id] h3::after {
 .qty-selector { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
 .qty-btn { background: var(--primary); color: #fff; border: none; width: 36px; height: 36px; border-radius: 8px; font-weight: 700; }
 #qty-input { width: 60px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; text-align: center; }
+
+.cart-modal-content { padding: 24px; }
+.cart-modal-line { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.cart-modal-footer { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; }
