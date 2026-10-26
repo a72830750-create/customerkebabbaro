@@ -852,3 +852,6 @@ section[id] h3::after {
 .cart-modal-footer { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; }
 
 .qty-minus-small, .qty-plus-small { background: var(--primary); color: #fff; border: none; width: 28px; height: 28px; border-radius: 6px; font-weight: 700; }
+
+.cart-modal-line-qty span { display: inline-block; min-width: 24px; text-align: center; border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; margin: 0 6px; }
+.cart-modal-line-qty { gap: 4px; }
