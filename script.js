@@ -243,6 +243,7 @@ async function submitOrder() {
     const deliveryTime = document.getElementById('delivery-time')?.value || null;
     const pickupTime = document.getElementById('pickup-time')?.value || null;
 
+    try { const r=await fetch('https://backend-1-osni.onrender.com/api/settings'); const d=await r.json(); if(d.accepting_orders==='false'){ if(checkoutStatus){checkoutStatus.textContent='Ristorante chiuso. Ordini non accettati.';checkoutStatus.className='checkout-status error';} return; } } catch(e){}
     if (orderType === 'delivery' && getCartTotal() < 15) { if (checkoutStatus) { checkoutStatus.textContent = 'Ordine minimo per consegna: €15.00.'; checkoutStatus.className = 'checkout-status error'; } return; }
     if (!name || !phone) { if (checkoutStatus) { checkoutStatus.textContent = 'Compila nome e telefono.'; checkoutStatus.className = 'checkout-status error'; } return; }
     if (orderType === 'delivery' && !address) { if (checkoutStatus) { checkoutStatus.textContent = 'Inserisci indirizzo di consegna.'; checkoutStatus.className = 'checkout-status error'; } return; }
