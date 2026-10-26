@@ -1,7 +1,7 @@
-// ===== ALI KEBABBARO - Ordering System =====
+// ===== FARID KEBAB - Ordering System =====
 
 let cart = [];
-function saveCart() { try { localStorage.setItem('forno99_cart', JSON.stringify(cart)); } catch(e) {} }
+function saveCart() { try { localStorage.setItem('faridkebab_cart', JSON.stringify(cart)); } catch(e) {} }
 
 // DOM refs
 const floatingCartBtn = document.getElementById('floating-cart-btn');
@@ -290,11 +290,11 @@ async function submitOrder() {
 }
 
 function getSavedAddresses() {
-    try { return JSON.parse(localStorage.getItem('forno99_addresses') || '[]'); }
+    try { return JSON.parse(localStorage.getItem('faridkebab_addresses') || '[]'); }
     catch { return []; }
 }
 function saveSavedAddresses(addrs) {
-    try { localStorage.setItem('forno99_addresses', JSON.stringify(addrs)); } catch(e) {}
+    try { localStorage.setItem('faridkebab_addresses', JSON.stringify(addrs)); } catch(e) {}
 }
 function openSavedAddressesModal() {
     renderSavedAddressesList();
@@ -347,7 +347,7 @@ function renderSavedAddressesList() {
 
 document.addEventListener('DOMContentLoaded', function() {
     try {
-        const savedCart = localStorage.getItem('forno99_cart');
+        const savedCart = localStorage.getItem('faridkebab_cart');
         if (savedCart) cart = JSON.parse(savedCart);
     } catch(e) { cart = []; }
 
