@@ -857,3 +857,5 @@ section[id] h3::after {
 .cart-modal-line-qty { gap: 4px; }
 
 .cart-modal-line-remove { background: #1a1a1a; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; }
+
+.cart-modal-line-remove { margin-left: 12px; }
