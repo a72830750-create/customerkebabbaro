@@ -390,6 +390,21 @@
       }
     });
     </script>
+    <script>
+    (function(){
+      var el=document.getElementById('delivery-time');
+      if(!el) return;
+      el.value='00:00';
+      el.addEventListener('input',function(){
+        var v=el.value.replace(/[^0-9]/g,'');
+        if(v.length>4) v=v.slice(0,4);
+        var h=v.slice(0,2), m=v.slice(2,4);
+        if(h.length===2){ var hi=parseInt(h,10); if(hi>12) h='12'; }
+        if(m.length===2){ var mi=parseInt(m,10); if(mi>59) m='59'; }
+        el.value = (h+(m?':'+m:''));
+      });
+    })();
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
