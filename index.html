@@ -293,8 +293,18 @@
                     <div id="delivery-distance-info" style="margin-top:8px; font-size:13px; color:#5a5040;"></div>
                 </div>
                 <div class="form-group">
-                    <label class="modal-label" for="order-notes">Note Ordine (opzionale)</label>
-                    <textarea id="order-notes" class="modal-textarea" placeholder="es. senza cipolla, salsa extra..."></textarea>
+                    <label class="modal-label">Metodo di Pagamento</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="payment_method" value="cash" checked> Bar (Contanti)</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="modal-label" for="delivery-time">Orario di Consegna/Ritiro</label>
+                    <select id="delivery-time" class="modal-textarea" style="min-height:auto;">
+                        <option value="asap">Il prima possibile</option>
+                        <option value="30">Tra 30 minuti</option>
+                        <option value="60">Tra 1 ora</option>
+                    </select>
                 </div>
             </div>
             <div class="checkout-total">
