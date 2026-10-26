@@ -861,3 +861,5 @@ section[id] h3::after {
 .cart-modal-line-remove { margin-left: 12px; }
 
 .cart-modal-line { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+.cart-modal-line-info { display: flex; flex-direction: column; gap: 2px; }

@@ -83,13 +83,15 @@ function updateCartUI() {
             let html = '';
             cart.forEach(item => {
                 html += '<div class="cart-modal-line">' +
+                    '<div class="cart-modal-line-info">' +
                     '<span class="cart-modal-line-name">' + item.name + '</span>' +
+                    '<span class="cart-modal-line-price">€' + (item.price * item.qty).toFixed(2) + '</span>' +
+                    '</div>' +
                     '<div class="cart-modal-line-qty">' +
                     '<button class="qty-minus-small" data-name="' + item.name + '">-</button>' +
                     '<span>' + item.qty + '</span>' +
                     '<button class="qty-plus-small" data-name="' + item.name + '">+</button>' +
                     '</div>' +
-                    '<span class="cart-modal-line-price">€' + (item.price * item.qty).toFixed(2) + '</span>' +
                     '<button class="cart-modal-line-remove" data-name="' + item.name + '">Rimuovi</button>' +
                     '</div>';
             });
