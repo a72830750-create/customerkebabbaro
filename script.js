@@ -493,3 +493,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+
+function initFixedFallback() {
+    var nav=document.querySelector('.quick-nav');
+    var navbar=document.querySelector('.navbar');
+    if(!nav||!navbar) return;
+    var threshold=nav.getBoundingClientRect().top + window.scrollY - navbar.offsetHeight;
+    function onScroll(){
+        if(window.scrollY >= threshold){
+            nav.classList.add('is-fixed');
+        } else {
+            nav.classList.remove('is-fixed');
+        }
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    window.addEventListener('resize', function(){ threshold=nav.getBoundingClientRect().top+window.scrollY-navbar.offsetHeight; onScroll(); }, {passive:true});
+    onScroll();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initFixedFallback);
+else initFixedFallback();
