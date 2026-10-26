@@ -873,3 +873,6 @@ section[id] h3::after {
 .radio-group .radio-label { padding: 6px 20px; font-size: 13px; }
 
 .qty-selector { flex-direction: column; align-items: flex-start; }
+
+.review-avatar { width:36px; height:36px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; margin-bottom:6px; }
+.review-stars { color: var(--accent); margin-bottom:6px; }
