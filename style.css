@@ -1,16 +1,16 @@
 /* ===== Premium Modern Design System ===== */
 :root {
-    --primary: #D62828;
-    --primary-dark: #BA181B;
-    --primary-light: #E85D5D;
-    --accent: #F77F50;
-    --accent-gold: #FCBF49;
-    --warm-bg: #FFF8F0;
-    --cream: #FEF7ED;
-    --text-primary: #1a1a1a;
-    --text-secondary: #4a4a4a;
-    --text-muted: #6b6b6b;
-    --border: rgba(26,26,26,0.08);
+    --primary: #B94E35;
+    --primary-dark: #263A2E;
+    --primary-light: #E5A04B;
+    --accent: #E5A04B;
+    --accent-gold: #E5A04B;
+    --warm-bg: #F4EFE5;
+    --cream: #F4EFE5;
+    --text-primary: #282724;
+    --text-secondary: #282724;
+    --text-muted: #282724;
+    --border: rgba(40,39,36,0.12);
     --border-light: rgba(26,26,26,0.04);
     --shadow-xs: 0 1px 2px rgba(0,0,0,0.02);
     --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
