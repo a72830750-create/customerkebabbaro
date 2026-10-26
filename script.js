@@ -1,8 +1,7 @@
-// ===== Forno 99 - Clean Ordering System =====
+// ===== ALI KEBABBARO - Ordering System =====
 
-// Cart state
-let cart = JSON.parse(localStorage.getItem('forno99_cart') || '[]');
-function saveCart() { localStorage.setItem('forno99_cart', JSON.stringify(cart)); }
+let cart = [];
+function saveCart() { try { localStorage.setItem('forno99_cart', JSON.stringify(cart)); } catch(e) {} }
 
 // DOM refs
 const floatingCartBtn = document.getElementById('floating-cart-btn');
@@ -40,14 +39,30 @@ const addressGroup = document.getElementById('address-group');
 
 let currentDish = null;
 
-// ===== Cart Functions =====
+// Active category tracking for quick nav
+function initQuickNavActive() {
+    if (!('IntersectionObserver' in window)) return;
+    const sections = document.querySelectorAll('section[id]');
+    const btns = document.querySelectorAll('.quick-nav-btn');
+    if (!sections.length || !btns.length) return;
+    const obs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.id;
+                btns.forEach(b => b.classList.toggle('active', b.dataset.target === id));
+            }
+        });
+    }, { rootMargin: '-140px 0px -60% 0px', threshold: 0 });
+    sections.forEach(s => obs.observe(s));
+}
+
+// Cart Functions
 function getCartCount() { return cart.reduce((s, i) => s + i.qty, 0); }
 function getCartTotal() { return cart.reduce((s, i) => s + i.price * i.qty, 0); }
 
 function addToCart(name, price, qty, requests) {
     const existing = cart.find(i => i.name === name && (i.requests || '') === (requests || ''));
-    if (existing) { existing.qty += qty; }
-    else { cart.push({ name, price, qty, requests: requests || '' }); }
+    if (existing) { existing.qty += qty; } else { cart.push({ name, price, qty, requests: requests || '' }); }
     saveCart();
     updateCartUI();
 }
@@ -103,167 +118,77 @@ function updateCartUI() {
     }
 }
 
-// ===== Modal Functions =====
+// Modal Functions
 function openDishModal(name, price) {
     currentDish = { name, price };
-    modalDishName.textContent = name;
-    modalUnitPrice.textContent = 'Prezzo unitario: €' + price.toFixed(2);
-    qtyInput.value = 1;
-    specialRequests.value = '';
-    orderModal.classList.add('show');
+    if (modalDishName) modalDishName.textContent = name;
+    if (modalUnitPrice) modalUnitPrice.textContent = 'Prezzo unitario: €' + price.toFixed(2);
+    if (qtyInput) qtyInput.value = 1;
+    if (specialRequests) specialRequests.value = '';
+    if (orderModal) orderModal.classList.add('show');
 }
 
 function closeDishModal() {
-    orderModal.classList.remove('show');
+    if (orderModal) orderModal.classList.remove('show');
     currentDish = null;
 }
 
 function openCartModal() {
     updateCartUI();
-    cartModal.classList.add('show');
+    if (cartModal) cartModal.classList.add('show');
 }
 
 function closeCartModal() {
-    cartModal.classList.remove('show');
+    if (cartModal) cartModal.classList.remove('show');
 }
 
 function openCheckoutModal() {
     closeCartModal();
-    populateAddressDropdown();
     const total = getCartTotal();
     const deliveryFee = 0.00;
     const grandTotal = total + deliveryFee;
-    checkoutSubtotal.textContent = '€' + total.toFixed(2);
-    checkoutDelivery.textContent = '€' + deliveryFee.toFixed(2);
-    checkoutGrandTotal.textContent = '€' + grandTotal.toFixed(2);
+    if (checkoutSubtotal) checkoutSubtotal.textContent = '€' + total.toFixed(2);
+    if (checkoutDelivery) checkoutDelivery.textContent = '€' + deliveryFee.toFixed(2);
+    if (checkoutGrandTotal) checkoutGrandTotal.textContent = '€' + grandTotal.toFixed(2);
 
     let html = '';
     cart.forEach(item => {
         html += '<p>' + item.name + ' (x' + item.qty + ') - €' + (item.price * item.qty).toFixed(2) + (item.requests ? '<br><small>Note: ' + item.requests + '</small>' : '') + '</p>';
     });
-    checkoutSummary.innerHTML = html || '<p>Nessun articolo nel carrello</p>';
+    if (checkoutSummary) checkoutSummary.innerHTML = html || '<p>Nessun articolo nel carrello</p>';
 
     const minMsg = document.getElementById('min-order-msg');
-    const checkoutSubmit = document.getElementById('checkout-submit');
+    const checkoutSubmitBtn = document.getElementById('checkout-submit');
     if (minMsg) {
-      const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'delivery';
-      if (orderType === 'delivery' && total < 15) {
-        minMsg.textContent = 'Aggiungi €' + (15 - total).toFixed(2) + ' per la consegna.';
-        minMsg.style.display = 'block';
-        if (checkoutSubmit) checkoutSubmit.disabled = true;
-      } else {
-        minMsg.textContent = '';
-        minMsg.style.display = 'none';
-        if (checkoutSubmit) checkoutSubmit.disabled = false;
-      }
+        const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'delivery';
+        if (orderType === 'delivery' && total < 15) {
+            minMsg.textContent = 'Aggiungi €' + (15 - total).toFixed(2) + ' per la consegna.';
+            minMsg.style.display = 'block';
+            if (checkoutSubmitBtn) checkoutSubmitBtn.disabled = true;
+        } else {
+            minMsg.textContent = '';
+            minMsg.style.display = 'none';
+            if (checkoutSubmitBtn) checkoutSubmitBtn.disabled = false;
+        }
     }
-
-    checkoutModal.classList.add('show');
+    if (checkoutModal) checkoutModal.classList.add('show');
 }
 
 function closeCheckoutModal() {
-    checkoutModal.classList.remove('show');
-    checkoutStatus.textContent = '';
+    if (checkoutModal) checkoutModal.classList.remove('show');
+    if (checkoutStatus) checkoutStatus.textContent = '';
 }
 
-
-async function geocode(q) {
-  try {
-    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q));
-    const j = await r.json();
-    if (j && j[0]) return { lat: +j[0].lat, lon: +j[0].lon };
-  } catch(e) {}
-  return null;
-}
-function distKm(a,b) {
-  const R=6371;
-  const dLat=(b.lat-a.lat)*Math.PI/180;
-  const dLon=(b.lon-a.lon)*Math.PI/180;
-  const x=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
-}
-
-async function submitOrder() {
-    const name = document.getElementById('customer-name').value.trim();
-    const phone = document.getElementById('customer-phone').value.trim();
-    const street = document.getElementById('addr-street')?.value.trim() || '';
-    const city = document.getElementById('addr-city')?.value.trim() || '';
-    const postcode = document.getElementById('addr-postcode')?.value.trim() || '';
-    const address = [street, city, postcode].filter(Boolean).join(', ');
-    const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'delivery';
-    const notes = document.getElementById('order-notes').value.trim();
-
-    if (orderType === 'delivery' && getCartTotal() < 15) { checkoutStatus.textContent = 'Ordine minimo per consegna: €15.00.'; checkoutStatus.className = 'checkout-status error'; return; }
-    if (!name || !phone) { checkoutStatus.textContent = 'Compila nome e telefono.'; checkoutStatus.className = 'checkout-status error'; return; }
-    if (orderType === 'delivery' && !address) { checkoutStatus.textContent = 'Inserisci indirizzo di consegna.'; checkoutStatus.className = 'checkout-status error'; return; }
-    if (orderType === 'delivery') {
-      if (!address.toLowerCase().includes('poggio a caiano')) {
-        checkoutStatus.textContent = 'Non consegniamo fuori da Poggio a Caiano.';
-        checkoutStatus.className = 'checkout-status error';
-        return;
-      }
-    }
-
-    // Save address if checkbox checked
-    const saveCheck = document.getElementById('save-address-check');
-    if (saveCheck && saveCheck.checked) {
-        const label = document.getElementById('address-label').value.trim() || 'Indirizzo';
-        if (address) {
-            const addrs = getSavedAddresses();
-            addrs.push({ label, address, phone });
-            saveSavedAddresses(addrs);
-            populateAddressDropdown();
-        }
-    }
-
-    const summary = cart.map(i => i.name + ' (x' + i.qty + ') - €' + (i.price * i.qty).toFixed(2)).join('\n');
-    const deliveryFee = 0.00;
-    const total = getCartTotal() + deliveryFee;
-    const order = {
-      order_number: 'ORD-' + Date.now().toString().slice(-6),
-      order_type: orderType,
-      customer_name: name,
-      customer_phone: phone,
-      delivery_address: orderType === 'delivery' ? address : null,
-      notes: notes,
-      subtotal: getCartTotal(),
-      delivery_fee: deliveryFee,
-      total: total,
-      items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price }))
-    };
-
-    try {
-      // Automatically fallback to Render backend if window.API_BASE is missing
-      const API_URL = 'https://backend-1-osni.onrender.com';
-      const resp = await fetch(API_URL + '/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(order)
-      });
-      if (!resp.ok) throw new Error('fail');
-    } catch(e) {
-      checkoutStatus.textContent = 'Ordine non inviato. Il server è attivo?';
-      checkoutStatus.className = 'checkout-status error';
-      return;
-    }
-
-    confirmTitle.textContent = 'Ordine Confermato!';
-    confirmMessage.textContent = 'Grazie, ' + name + '!\n\n' + summary + '\n\nTotal: €' + total.toFixed(2) + '\n' + (orderType === 'delivery' ? 'Consegna a: ' + address : 'Ritiro') + (notes ? '\nNote: ' + notes : '');
-    confirmModal.classList.add('show');
-
-    cart = [];
-    saveCart();
-    updateCartUI();
-    closeCheckoutModal();
-}
-
-// ===== Quick Nav =====
 function scrollToSection(id) {
     const el = document.getElementById(id);
     if (el) {
-        const offset = id === 'desserts' ? 260 : 220;
+        const nav = document.querySelector('.navbar');
+        const qnav = document.querySelector('.quick-nav');
+        const navH = nav ? nav.offsetHeight : 72;
+        const qH = qnav ? qnav.offsetHeight : 50;
+        const offset = navH + qH + 12;
         const top = el.getBoundingClientRect().top + window.pageYOffset - offset;
-        window.scrollTo({ top, behavior: 'smooth' });
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
     document.querySelectorAll('.quick-nav-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.target === id);
@@ -271,11 +196,10 @@ function scrollToSection(id) {
 }
 
 function closeConfirmModal() {
-    confirmModal.classList.remove('show');
+    if (confirmModal) confirmModal.classList.remove('show');
     window.location.reload();
 }
 
-// ===== Wednesday Promotion Popup =====
 function isWednesday() {
     const now = new Date();
     const berlin = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
@@ -287,13 +211,10 @@ function showPromoPopup() {
     const closeBtn = document.getElementById('promo-close');
     const btn = document.getElementById('promo-btn');
     if (!popup) return;
-
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' });
     if (localStorage.getItem('promo_shown_date') === today) return;
-
     popup.classList.add('show');
     localStorage.setItem('promo_shown_date', today);
-
     if (closeBtn) closeBtn.onclick = function() { popup.classList.remove('show'); };
     if (btn) btn.onclick = function() {
         popup.classList.remove('show');
@@ -307,26 +228,80 @@ function showPromoPopup() {
     popup.onclick = function(e) { if (e.target === popup) popup.classList.remove('show'); };
 }
 
-if (isWednesday()) {
-    setTimeout(showPromoPopup, 500);
+async function submitOrder() {
+    const name = document.getElementById('customer-name')?.value.trim() || '';
+    const phone = document.getElementById('customer-phone')?.value.trim() || '';
+    const street = document.getElementById('addr-street')?.value.trim() || '';
+    const city = document.getElementById('addr-city')?.value.trim() || '';
+    const postcode = document.getElementById('addr-postcode')?.value.trim() || '';
+    const address = [street, city, postcode].filter(Boolean).join(', ');
+    const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'delivery';
+    const notes = document.getElementById('order-notes')?.value.trim() || '';
+
+    if (orderType === 'delivery' && getCartTotal() < 15) { if (checkoutStatus) { checkoutStatus.textContent = 'Ordine minimo per consegna: €15.00.'; checkoutStatus.className = 'checkout-status error'; } return; }
+    if (!name || !phone) { if (checkoutStatus) { checkoutStatus.textContent = 'Compila nome e telefono.'; checkoutStatus.className = 'checkout-status error'; } return; }
+    if (orderType === 'delivery' && !address) { if (checkoutStatus) { checkoutStatus.textContent = 'Inserisci indirizzo di consegna.'; checkoutStatus.className = 'checkout-status error'; } return; }
+    if (orderType === 'delivery') {
+        if (!address.toLowerCase().includes('poggio a caiano')) {
+            if (checkoutStatus) { checkoutStatus.textContent = 'Non consegniamo fuori da Poggio a Caiano.'; checkoutStatus.className = 'checkout-status error'; }
+            return;
+        }
+    }
+
+    const summary = cart.map(i => i.name + ' (x' + i.qty + ') - €' + (i.price * i.qty).toFixed(2)).join('\n');
+    const deliveryFee = 0.00;
+    const total = getCartTotal() + deliveryFee;
+    const order = {
+        order_number: 'ORD-' + Date.now().toString().slice(-6),
+        order_type: orderType,
+        customer_name: name,
+        customer_phone: phone,
+        delivery_address: orderType === 'delivery' ? address : null,
+        notes: notes,
+        subtotal: getCartTotal(),
+        delivery_fee: deliveryFee,
+        total: total,
+        items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price }))
+    };
+
+    try {
+        const API_URL = 'https://backend-1-osni.onrender.com';
+        const resp = await fetch(API_URL + '/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(order)
+        });
+        if (!resp.ok) throw new Error('fail');
+    } catch(e) {
+        if (checkoutStatus) { checkoutStatus.textContent = 'Ordine non inviato. Il server è attivo?'; checkoutStatus.className = 'checkout-status error'; }
+        return;
+    }
+
+    if (confirmTitle) confirmTitle.textContent = 'Ordine Confermato!';
+    if (confirmMessage) confirmMessage.textContent = 'Grazie, ' + name + '!\n\n' + summary + '\n\nTotal: €' + total.toFixed(2) + '\n' + (orderType === 'delivery' ? 'Consegna a: ' + address : 'Ritiro') + (notes ? '\nNote: ' + notes : '');
+    if (confirmModal) confirmModal.classList.add('show');
+
+    cart = [];
+    saveCart();
+    updateCartUI();
+    closeCheckoutModal();
 }
 
-// ===== Saved Addresses =====
 function getSavedAddresses() {
     try { return JSON.parse(localStorage.getItem('forno99_addresses') || '[]'); }
     catch { return []; }
 }
-
 function saveSavedAddresses(addrs) {
-    localStorage.setItem('forno99_addresses', JSON.stringify(addrs));
+    try { localStorage.setItem('forno99_addresses', JSON.stringify(addrs)); } catch(e) {}
 }
-
 function openSavedAddressesModal() {
     renderSavedAddressesList();
-    document.getElementById('saved-addresses-modal').classList.add('show');
+    const m = document.getElementById('saved-addresses-modal');
+    if (m) m.classList.add('show');
 }
 function closeSavedAddressesModal() {
-    document.getElementById('saved-addresses-modal').classList.remove('show');
+    const m = document.getElementById('saved-addresses-modal');
+    if (m) m.classList.remove('show');
 }
 function renderSavedAddressesList() {
     const list = document.getElementById('saved-addresses-list');
@@ -336,7 +311,7 @@ function renderSavedAddressesList() {
     let html = '';
     addrs.forEach((a, i) => {
         html += '<div class="cart-modal-line saved-addr-line" data-idx="' + i + '" style="cursor:pointer;">' +
-            '<span class="cart-modal-line-name">' + a.label + ' - ' + a.address + '</span>' +
+            '<span class="cart-modal-line-name">' + (a.label || '') + ' - ' + (a.address || '') + '</span>' +
             '<button class="cart-modal-line-remove" data-idx="' + i + '">Rimuovi</button>' +
             '</div>';
     });
@@ -347,11 +322,12 @@ function renderSavedAddressesList() {
             const idx = parseInt(this.dataset.idx);
             const addrs = getSavedAddresses();
             if (addrs[idx]) {
-                const parts = addrs[idx].address.split(', ');
-                document.getElementById('addr-street').value = parts[0] || '';
-                document.getElementById('addr-city').value = parts[1] || '';
-                document.getElementById('addr-postcode').value = parts[2] || '';
-                if (addrs[idx].phone) document.getElementById('customer-phone').value = addrs[idx].phone;
+                const a = addrs[idx];
+                if (document.getElementById('customer-name')) document.getElementById('customer-name').value = a.name || '';
+                if (document.getElementById('customer-phone')) document.getElementById('customer-phone').value = a.phone || '';
+                if (document.getElementById('addr-street')) document.getElementById('addr-street').value = a.street || (a.address.split(', ')[0] || '');
+                if (document.getElementById('addr-city')) document.getElementById('addr-city').value = a.city || (a.address.split(', ')[1] || '');
+                if (document.getElementById('addr-postcode')) document.getElementById('addr-postcode').value = a.postcode || (a.address.split(', ')[2] || '');
                 closeSavedAddressesModal();
             }
         });
@@ -363,40 +339,29 @@ function renderSavedAddressesList() {
             addrs = addrs.filter((_, i) => i !== idx);
             saveSavedAddresses(addrs);
             renderSavedAddressesList();
-            populateAddressDropdown();
         };
     });
 }
-function populateAddressDropdown() {
-    const sel = document.getElementById('saved-address-select');
-    if (!sel) return;
-    const addrs = getSavedAddresses();
-    sel.innerHTML = '<option value="">-- Nuovo indirizzo --</option>';
-    addrs.forEach((a, i) => {
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = a.label + ' - ' + a.address;
-        sel.appendChild(opt);
-    });
-}
 
-const qn = document.querySelector('.quick-nav');
-let qnTop = qn ? qn.offsetTop : 0;
-window.addEventListener('scroll', function() {
-    if (!qn) return;
-    if (window.scrollY > qnTop) qn.classList.add('fixed');
-    else qn.classList.remove('fixed');
-});
-
-// ===== Init =====
 document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const savedCart = localStorage.getItem('forno99_cart');
+        if (savedCart) cart = JSON.parse(savedCart);
+    } catch(e) { cart = []; }
+
+    initQuickNavActive();
+
     document.querySelectorAll('.quick-nav-btn').forEach(btn => {
-        btn.addEventListener('click', function() { scrollToSection(this.dataset.target); });
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            scrollToSection(this.dataset.target);
+        });
     });
 
     document.querySelectorAll('.dish-card').forEach(card => {
         card.addEventListener('click', function(e) {
             if (e.target.closest('.add-to-cart-btn')) return;
+            if (e.target.closest('.size-selector')) return;
             openDishModal(this.dataset.name, parseFloat(this.dataset.price));
         });
     });
@@ -404,6 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
             const card = this.closest('.dish-card');
+            if (!card) return;
             openDishModal(card.dataset.name, parseFloat(card.dataset.price));
         });
     });
@@ -414,32 +380,30 @@ document.addEventListener('DOMContentLoaded', function() {
             const option = this.options[this.selectedIndex];
             const price = parseFloat(option.dataset.price);
             card.dataset.price = price.toFixed(2);
-            card.querySelector('.dish-card-price').textContent = '€' + price.toFixed(2);
+            const priceEl = card.querySelector('.dish-card-price');
+            if (priceEl) priceEl.textContent = '€' + price.toFixed(2);
             const btn = card.querySelector('.add-to-cart-btn');
-            btn.dataset.price = price.toFixed(2);
-            btn.dataset.name = card.dataset.name + ' (' + this.value + ')';
+            if (btn) { btn.dataset.price = price.toFixed(2); btn.dataset.name = card.dataset.name + ' (' + this.value + ')'; }
         });
     });
-
     document.querySelectorAll('.size-selector').forEach(sel => {
         sel.dispatchEvent(new Event('change'));
     });
 
     if (modalAdd) modalAdd.addEventListener('click', function() {
         if (!currentDish) return;
-        const qty = parseInt(qtyInput.value, 10) || 1;
-        const req = specialRequests.value.trim();
+        const qty = Math.max(1, Math.min(99, parseInt(qtyInput?.value, 10) || 1));
+        const req = specialRequests?.value.trim() || '';
         addToCart(currentDish.name, currentDish.price, qty, req);
         closeDishModal();
     });
     if (modalCancel) modalCancel.addEventListener('click', closeDishModal);
     if (modalClose) modalClose.addEventListener('click', closeDishModal);
     if (orderModal) orderModal.addEventListener('click', function(e) { if (e.target === orderModal) closeDishModal(); });
-    if (qtyMinus) qtyMinus.addEventListener('click', function() { qtyInput.value = Math.max(1, parseInt(qtyInput.value) - 1); });
-    if (qtyPlus) qtyPlus.addEventListener('click', function() { qtyInput.value = parseInt(qtyInput.value) + 1; });
+    if (qtyMinus) qtyMinus.addEventListener('click', function() { if (qtyInput) qtyInput.value = Math.max(1, (parseInt(qtyInput.value) || 1) - 1); });
+    if (qtyPlus) qtyPlus.addEventListener('click', function() { if (qtyInput) qtyInput.value = Math.min(99, (parseInt(qtyInput.value) || 1) + 1); });
 
     if (floatingCartBtn) floatingCartBtn.addEventListener('click', openCartModal);
-
     if (cartModalClose) cartModalClose.addEventListener('click', closeCartModal);
     if (cartModalCheckout) cartModalCheckout.addEventListener('click', openCheckoutModal);
     if (cartModal) cartModal.addEventListener('click', function(e) { if (e.target === cartModal) closeCartModal(); });
@@ -453,45 +417,21 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', function() {
             if (addressGroup) addressGroup.style.display = this.value === 'delivery' ? 'block' : 'none';
             const minMsg = document.getElementById('min-order-msg');
-            const checkoutSubmit = document.getElementById('checkout-submit');
+            const checkoutSubmitBtn = document.getElementById('checkout-submit');
             const total = getCartTotal();
             if (minMsg) {
-              if (this.value === 'delivery' && total < 15) {
-                minMsg.textContent = 'Aggiungi €' + (15 - total).toFixed(2) + ' more to qualify for delivery.';
-                minMsg.style.display = 'block';
-                if (checkoutSubmit) checkoutSubmit.disabled = true;
-              } else {
-                minMsg.textContent = '';
-                minMsg.style.display = 'none';
-                if (checkoutSubmit) checkoutSubmit.disabled = false;
-              }
+                if (this.value === 'delivery' && total < 15) {
+                    minMsg.textContent = 'Aggiungi €' + (15 - total).toFixed(2) + ' per la consegna.';
+                    minMsg.style.display = 'block';
+                    if (checkoutSubmitBtn) checkoutSubmitBtn.disabled = true;
+                } else {
+                    minMsg.textContent = '';
+                    minMsg.style.display = 'none';
+                    if (checkoutSubmitBtn) checkoutSubmitBtn.disabled = false;
+                }
             }
         });
     });
-
-    const addrSelect = document.getElementById('saved-address-select');
-    if (addrSelect) {
-        addrSelect.addEventListener('change', function() {
-            const addrs = getSavedAddresses();
-            const idx = parseInt(this.value);
-            const saveGroup = document.getElementById('save-address-label-group');
-            const actions = document.getElementById('saved-address-actions');
-            if (this.value === '') {
-                document.getElementById('addr-street').value = '';
-                document.getElementById('addr-city').value = '';
-                document.getElementById('addr-postcode').value = '';
-                if (saveGroup) saveGroup.style.display = 'none';
-                if (actions) actions.style.display = 'none';
-            } else if (!isNaN(idx) && addrs[idx]) {
-                const parts = addrs[idx].address.split(', ');
-                document.getElementById('addr-street').value = parts[0] || '';
-                document.getElementById('addr-city').value = parts[1] || '';
-                document.getElementById('addr-postcode').value = parts[2] || '';
-                if (saveGroup) saveGroup.style.display = 'none';
-                if (actions) actions.style.display = 'flex';
-            }
-        });
-    }
 
     const saveCheck = document.getElementById('save-address-check');
     if (saveCheck) {
@@ -528,4 +468,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     updateCartUI();
+    if (isWednesday()) setTimeout(showPromoPopup, 400);
+
+    // Scroll reveal
+    if ('IntersectionObserver' in window) {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
+        document.querySelectorAll('.dish-card, section[id]').forEach((el, i) => {
+            el.classList.add('reveal');
+            el.style.transitionDelay = (i * 0.04) + 's';
+            obs.observe(el);
+        });
+    } else {
+        document.querySelectorAll('.dish-card, section[id]').forEach(el => {
+            el.classList.add('reveal', 'visible');
+        });
+    }
 });
