@@ -299,12 +299,14 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="modal-label" for="delivery-time">Orario di Consegna/Ritiro</label>
-                    <select id="delivery-time" class="modal-textarea" style="min-height:auto;">
-                        <option value="asap">Il prima possibile</option>
-                        <option value="30">Tra 30 minuti</option>
-                        <option value="60">Tra 1 ora</option>
-                    </select>
+                    <label class="modal-label">Orario di Consegna</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="delivery_timing" value="now" checked> Consegna Ora</label>
+                        <label class="radio-label"><input type="radio" name="delivery_timing" value="later"> Consegna Dopo</label>
+                    </div>
+                    <div id="custom-time-group" style="display:none; margin-top:8px;">
+                        <input type="time" id="delivery-time" class="modal-textarea" style="min-height:auto;">
+                    </div>
                 </div>
             </div>
             <div class="checkout-total">
@@ -380,6 +382,14 @@
     </div>
 
 <script>window.API_BASE='https://backend-1-osni.onrender.com';</script>
+    <script>
+    document.addEventListener('change', function(e){
+      if(e.target && e.target.name==='delivery_timing'){
+        var g=document.getElementById('custom-time-group');
+        if(g) g.style.display = e.target.value==='later' ? 'block' : 'none';
+      }
+    });
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
