@@ -557,7 +557,7 @@ document.addEventListener('DOMContentLoaded', function(){
         img.alt=name;
         img.style.width='100%';
         img.style.height='200px';
-        img.style.objectFit='contain';
+        img.style.objectFit='fill';
         img.style.borderRadius='8px';
         img.style.marginBottom='8px';
         img.referrerPolicy='no-referrer';
