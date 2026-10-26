@@ -532,7 +532,7 @@ var IMGMAP = {
  "Menu panino hamburger, patatine e bevanda":"menu panino hamburger patatine e bevanda.png",
  "Menu hot dog, patatine e bevanda":"menu hot dog patatine e bevanda.png",
  "Menu alette di pollo, patatine e bevanda":"menu aletto di pollo patatine e bevanda.png",
- "Nuggets, patatine e bevanda":"nuggets patatine e bevanda.png",
+ "Menu nuggetts, patatine e bevanda":"nuggets patatine e bevanda.png",
  "Vaschetta solo carne piccola":"https://tb-static.uber.com/prod/image-proc/processed_images/0f8f5a3450a089450ee60d759bc49cc9/5143f1e218c67c20fe5a4cd33d90b07b.jpeg",
  "Vaschetta solo carne media":"https://tb-static.uber.com/prod/image-proc/processed_images/0f8f5a3450a089450ee60d759bc49cc9/5143f1e218c67c20fe5a4cd33d90b07b.jpeg",
  "Vaschetta solo carne grande":"https://tb-static.uber.com/prod/image-proc/processed_images/0f8f5a3450a089450ee60d759bc49cc9/5143f1e218c67c20fe5a4cd33d90b07b.jpeg",
