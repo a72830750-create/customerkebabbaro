@@ -878,3 +878,6 @@ section[id] h3::after {
 .review-stars { color: var(--accent); margin-bottom:6px; }
 
 .quick-nav.is-fixed { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 1140px; z-index: 950; margin: 0; }
+
+.badge { position:absolute; top:8px; right:8px; background:var(--primary); color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:700; }
+.dish-card { position: relative; }
