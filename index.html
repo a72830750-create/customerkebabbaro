@@ -230,12 +230,6 @@
                     <input type="text" id="addr-street" class="modal-textarea" style="min-height:auto; margin-top:8px;" placeholder="Via">
                     <input type="text" id="addr-city" class="modal-textarea" style="min-height:auto; margin-top:8px;" placeholder="Città">
                     <input type="text" id="addr-postcode" class="modal-textarea" style="min-height:auto; margin-top:8px;" placeholder="CAP">
-                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                        <label style="display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer;">
-                            <input type="checkbox" id="save-address-check"> Salva questo indirizzo per dopo
-                        </label>
-                        <button type="button" id="open-saved-addresses-btn" class="modal-cancel" style="flex:none; padding:6px 12px; font-size:13px;">Indirizzi Salvati</button>
-                    </div>
                     <div id="save-address-label-group" style="display:none; margin-top:8px;">
                         <input type="text" id="address-label" class="modal-textarea" style="min-height:auto;" placeholder="Etichetta (es. Casa, Lavoro)">
                     </div>
@@ -243,7 +237,12 @@
                         <button type="button" id="edit-address-btn" class="modal-cancel" style="flex:none; padding:6px 12px; font-size:13px;">Modifica</button>
                         <button type="button" id="delete-address-btn" class="modal-cancel" style="flex:none; padding:6px 12px; font-size:13px;">Elimina</button>
                     </div>
-                    <button type="button" id="clear-all-addresses-btn" class="modal-cancel" style="margin-top:8px; padding:6px 12px; font-size:13px; width:auto;">Clear All Indirizzi Salvati</button>
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer;">
+                            <input type="checkbox" id="save-address-check"> Salva questo indirizzo per dopo
+                        </label>
+                        <button type="button" id="open-saved-addresses-btn" class="modal-cancel" style="flex:none; padding:6px 12px; font-size:13px;">Indirizzi Salvati</button>
+                    </div>
                     <div id="delivery-distance-info" style="margin-top:8px; font-size:13px; color:#5a5040;"></div>
                 </div>
                 <div class="form-group" id="pickup-time-group" style="display:none;">

@@ -345,6 +345,7 @@ function renderSavedAddressesList() {
     list.querySelectorAll('.cart-modal-line-remove').forEach(btn => {
         btn.onclick = function() {
             const idx = parseInt(this.dataset.idx);
+            if (!confirm('Rimuovere questo indirizzo salvato?')) return;
             let addrs = getSavedAddresses();
             addrs = addrs.filter((_, i) => i !== idx);
             saveSavedAddresses(addrs);
