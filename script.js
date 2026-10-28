@@ -530,7 +530,7 @@ else initFixedFallback();
 
 
 
-window.showMyOrder=function(){const num=localStorage.getItem("faridkebab_last_order");if(!num){alert("No order yet");return;}const modal=document.getElementById("my-order-modal");if(modal)modal.classList.add("show");const el=document.getElementById("my-order-status");fetch("https://backend-1-osni.onrender.com/api/orders/lookup/"+num).then(r=>r.json()).then(d=>{if(el)el.textContent=d.order_number+": "+d.status;if(d.status==="completed"){localStorage.removeItem("faridkebab_last_order");if(el)el.textContent="";location.reload();}});};
+window.showMyOrder=function(){const num=localStorage.getItem("faridkebab_last_order");if(!num){const mob=document.getElementById("my-order-btn");if(mob)mob.style.display="none";return;}const modal=document.getElementById("my-order-modal");const el=document.getElementById("my-order-status");fetch("https://backend-1-osni.onrender.com/api/orders/lookup/"+num).then(r=>r.json()).then(d=>{if(el)el.textContent=d.order_number+": "+d.status;const mob=document.getElementById("my-order-btn");if(mob)mob.style.display = d.status==="completed" ? "flex" : "none";if(d.status!=="completed")return;if(modal)modal.classList.add("show");if(d.status==="completed"){localStorage.removeItem("faridkebab_last_order");if(el)el.textContent="";location.reload();}});};
 
 async function applyAccepting(){
   try{const r=await fetch((p.includes('alikebab')?'https://new-alikebab-backend.onrender.com':'https://backend-1-osni.onrender.com')+'/api/settings');const d=await r.json();
