@@ -531,3 +531,13 @@ else initFixedFallback();
 
 
 window.showMyOrder=function(){const num=localStorage.getItem("faridkebab_last_order");if(!num){alert("No order yet");return;}const modal=document.getElementById("my-order-modal");if(modal)modal.classList.add("show");const el=document.getElementById("my-order-status");fetch("https://backend-1-osni.onrender.com/api/orders/lookup/"+num).then(r=>r.json()).then(d=>{if(el)el.textContent=d.order_number+": "+d.status;if(d.status==="completed"){localStorage.removeItem("faridkebab_last_order");if(el)el.textContent="";location.reload();}});};
+
+async function applyAccepting(){
+  try{const r=await fetch((p.includes('alikebab')?'https://new-alikebab-backend.onrender.com':'https://backend-1-osni.onrender.com')+'/api/settings');const d=await r.json();
+  if(d.accepting_orders==='false'){
+    let b=document.getElementById('closed-banner'); if(!b){b=document.createElement('div');b.id='closed-banner';b.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#fff;padding:10px;text-align:center;z-index:9999;';b.textContent='Ordini chiusi dal proprietario';document.body.appendChild(b);}
+    document.querySelectorAll('button').forEach(x=>x.disabled=true);
+  } else { const b=document.getElementById('closed-banner'); if(b) b.remove(); }
+  }catch(e){}
+}
+setInterval(applyAccepting,5000); applyAccepting();
