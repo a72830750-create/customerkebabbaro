@@ -238,7 +238,9 @@ async function submitOrder() {
     const postcode = document.getElementById('addr-postcode')?.value.trim() || '';
     const address = [street, city, postcode].filter(Boolean).join(', ');
     const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'delivery';
-    const notes = document.getElementById('order-notes')?.value.trim() || '';
+    const itemNotes = cart.map(i => i.requests ? (i.name + ': ' + i.requests) : '').filter(Boolean).join('; ');
+    const orderNotes = document.getElementById('order-notes')?.value.trim() || '';
+    const notes = [itemNotes, orderNotes].filter(Boolean).join('; ');
     const deliveryTiming = document.querySelector('input[name="delivery_timing"]:checked')?.value || 'now';
     const deliveryTime = document.getElementById('delivery-time')?.value || null;
     const pickupTime = document.getElementById('pickup-time')?.value || null;
