@@ -245,7 +245,7 @@ async function submitOrder() {
     const deliveryTime = document.getElementById('delivery-time')?.value || null;
     const pickupTime = document.getElementById('pickup-time')?.value || null;
 
-    try { const r=await fetch('https://backend-1-osni.onrender.com/api/settings'); const d=await r.json(); if(d.accepting_orders==='false'){ if(checkoutStatus){checkoutStatus.textContent='Ristorante chiuso. Ordini non accettati.';checkoutStatus.className='checkout-status error';} return; } } catch(e){}
+    // try { const r=await fetch('https://backend-1-osni.onrender.com/api/settings'); const d=await r.json(); if(d.accepting_orders==='false'){ if(checkoutStatus){checkoutStatus.textContent='Ristorante chiuso. Ordini non accettati.';checkoutStatus.className='checkout-status error';} return; } } catch(e){}
     if (orderType === 'delivery' && getCartTotal() < 15) { if (checkoutStatus) { checkoutStatus.textContent = 'Ordine minimo per consegna: €15.00.'; checkoutStatus.className = 'checkout-status error'; } return; }
     if (!name || !phone) { if (checkoutStatus) { checkoutStatus.textContent = 'Compila nome e telefono.'; checkoutStatus.className = 'checkout-status error'; } return; }
     if (orderType === 'delivery' && !address) { if (checkoutStatus) { checkoutStatus.textContent = 'Inserisci indirizzo di consegna.'; checkoutStatus.className = 'checkout-status error'; } return; }
@@ -536,12 +536,12 @@ else initFixedFallback();
 
 window.showMyOrder=showMyOrder;
 
-async function applyAccepting(){
-  try{const r=await fetch((p.includes('alikebab')?'https://new-alikebab-backend.onrender.com':'https://backend-1-osni.onrender.com')+'/api/settings');const d=await r.json();
-  if(d.accepting_orders==='false'){
-    let b=document.getElementById('closed-banner'); if(!b){b=document.createElement('div');b.id='closed-banner';b.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#fff;padding:10px;text-align:center;z-index:9999;';b.textContent='Ordini chiusi dal proprietario';document.body.appendChild(b);}
-    document.querySelectorAll('button').forEach(x=>x.disabled=true);
-  } else { const b=document.getElementById('closed-banner'); if(b) b.remove(); }
-  }catch(e){}
-}
-setInterval(applyAccepting,5000); applyAccepting();
+// async function applyAccepting(){
+//   try{const r=await fetch((p.includes('alikebab')?'https://new-alikebab-backend.onrender.com':'https://backend-1-osni.onrender.com')+'/api/settings');const d=await r.json();
+//   if(d.accepting_orders==='false'){
+//     let b=document.getElementById('closed-banner'); if(!b){b=document.createElement('div');b.id='closed-banner';b.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#fff;padding:10px;text-align:center;z-index:9999;';b.textContent='Ordini chiusi dal proprietario';document.body.appendChild(b);}
+//     const s=document.getElementById('checkout-submit'); if(s) s.disabled=true;
+//   } else { const b=document.getElementById('closed-banner'); if(b) b.remove(); }
+//   }catch(e){}
+// }
+// setInterval(applyAccepting,5000); applyAccepting();
