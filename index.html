@@ -475,9 +475,13 @@ buildTimes("delivery-time");buildTimes("pickup-time");
 </script> -->
 
 <script>
-async function checkOrdersOpen(){try{const r=await fetch("https://backend-1-osni.onrender.com/api/settings");const d=await r.json();if(d.accepting_orders==="false"){const b=document.createElement("div");b.textContent="Orders are closed";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#000;color:#fff;text-align:center;padding:16px;font-weight:bold;z-index:9999;font-size:18px";document.body.appendChild(b);const btn=document.getElementById("checkout-submit");if(btn)btn.disabled=true;document.querySelectorAll(".add-to-cart-btn").forEach(b=>{b.disabled=true;b.style.opacity="0.5";});document.querySelectorAll(".dish-card").forEach(c=>{c.style.pointerEvents="none";c.style.opacity="0.6";});}}catch(e){}}
-checkOrdersOpen();
-setInterval(checkOrdersOpen,30000);
+(function(){function closeOrders(){
+  let b=document.getElementById('closed-banner'); if(!b){b=document.createElement('div');b.id='closed-banner';b.textContent='Ordini chiusi';b.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#000;color:#fff;text-align:center;padding:16px;font-weight:bold;z-index:9999;font-size:18px';document.body.appendChild(b);}
+  const btn=document.getElementById('checkout-submit'); if(btn) btn.disabled=true;
+  document.querySelectorAll('.add-to-cart-btn,.qty-minus,.qty-plus').forEach(el=>{el.disabled=true;el.style.opacity='0.5';el.style.pointerEvents='none';});
+  document.querySelectorAll('.dish-card').forEach(c=>{c.style.pointerEvents='none';c.style.opacity='0.6';});
+  const cart=document.getElementById('floating-cart-btn'); if(cart){cart.style.pointerEvents='none';cart.style.opacity='0.6';}
+} closeOrders(); window.__forceOrdersClosed=true; setInterval(closeOrders,2000);})();
 </script>
 
 <script>
