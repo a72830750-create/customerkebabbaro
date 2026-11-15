@@ -363,11 +363,39 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch(e) { cart = []; }
 
     initQuickNavActive();
-    const mob=document.getElementById("my-order-btn"); if(mob) mob.addEventListener("click", showMyOrder);
-    const num=document.getElementById("my-order-btn");const saved=localStorage.getItem("faridkebab_last_order");if(num&&saved){num.style.display="flex";showMyOrder();}
+    const mobBtn=document.getElementById("my-order-btn"); if(mobBtn) mobBtn.addEventListener("click", function(){ showMyOrder(true); });
 
-function showMyOrder(){const num=localStorage.getItem("faridkebab_last_order");if(!num){const mob=document.getElementById("my-order-btn");if(mob)mob.style.display="none";return;}const modal=document.getElementById("my-order-modal");const el=document.getElementById("my-order-status");fetch("https://backend-1-osni.onrender.com/api/orders/lookup/"+num).then(r=>{if(!r.ok)throw new Error("not found");return r.json();}).then(d=>{const mob=document.getElementById("my-order-btn");if(mob)mob.style.display="flex";const statuses=["new","accepted","preparing","ready","out_for_delivery","completed"];const rejected=d.status==="rejected";const idx=rejected?-1:statuses.indexOf(d.status);const labels={new:"Nuovo",accepted:"Accettato",preparing:"In preparazione",ready:"Pronto",out_for_delivery:"In consegna",completed:"Completato",rejected:"Rifiutato"};let html="<div class='order-timeline'>";statuses.forEach((s,i)=>{const done=!rejected&&i<=idx;const cur=!rejected&&i===idx;html+="<div class='tl-step"+(done?" done":"")+(cur?" current":"")+"'><span class='tl-dot'></span><span class='tl-label'>"+labels[s]+"</span></div>";});if(rejected)html+="<div class='tl-step rejected current'><span class='tl-dot'></span><span class='tl-label'>"+labels.rejected+"</span></div>";html+="</div>";html+="<div class='order-current'>"+(labels[d.status]||d.status)+"</div>";const eta=d.order_type==="pickup"? (d.pickup_time||"ASAP") : (d.delivery_timing==="later"?(d.delivery_time||"ASAP"):"ASAP");html+="<div class='order-eta'>"+(d.order_type==="pickup"?"Ritiro: ":"Consegna: ")+eta+"</div>";if(d.items&&d.items.length){html+="<ul class='order-items'>"+d.items.map(i=>"<li>"+i.qty+"x "+i.name+" <span>EUR"+(i.qty*i.price).toFixed(2)+"</span></li>").join("")+"</ul>";}html+="<div class='order-total'>EUR"+Number(d.total).toFixed(2)+"</div>";if(el)el.innerHTML=html;if(modal)modal.classList.add("show");});}
-setInterval(showMyOrder,5000);
+function showMyOrder(openModal){
+    const key="faridkebab_last_order"; const dataKey="faridkebab_last_order_data";
+    const num=localStorage.getItem(key); const mob=document.getElementById("my-order-btn"); const modal=document.getElementById("my-order-modal"); const el=document.getElementById("my-order-status");
+    if(!num){ if(mob)mob.style.display="none"; if(modal)modal.classList.remove("show"); if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;} return; }
+    if(mob)mob.style.display="flex";
+    function render(d){
+        if(!d) return;
+        try{localStorage.setItem(dataKey,JSON.stringify(d));}catch(e){}
+        const statuses=["new","accepted","preparing","ready","out_for_delivery","completed"]; const rejected=d.status==="rejected"; const idx=rejected?-1:statuses.indexOf(d.status);
+        const labels={new:"Nuovo",accepted:"Accettato",preparing:"In preparazione",ready:"Pronto",out_for_delivery:"In consegna",completed:"Completato",rejected:"Rifiutato"};
+        let html="<div class='order-timeline'>";statuses.forEach((s,i)=>{const done=!rejected&&i<=idx;const cur=!rejected&&i===idx;html+="<div class='tl-step"+(done?" done":"")+(cur?" current":"")+"'><span class='tl-dot'></span><span class='tl-label'>"+labels[s]+"</span></div>";});if(rejected)html+="<div class='tl-step rejected current'><span class='tl-dot'></span><span class='tl-label'>"+labels.rejected+"</span></div>";html+="</div>";
+        html+="<div class='order-current'>"+(labels[d.status]||d.status)+"</div>";
+        const eta=d.order_type==="pickup"? (d.pickup_time||"ASAP") : (d.delivery_timing==="later"?(d.delivery_time||"ASAP"):"ASAP");
+        html+="<div class='order-eta'>"+(d.order_type==="pickup"?"Ritiro: ":"Consegna: ")+eta+"</div>";
+        if(d.items&&d.items.length){html+="<ul class='order-items'>"+d.items.map(i=>"<li>"+i.qty+"x "+i.name+" <span>EUR"+(Number(i.qty)*Number(i.price)).toFixed(2)+"</span></li>").join("")+"</ul>";}
+        html+="<div class='order-total'>EUR"+Number(d.total||0).toFixed(2)+"</div>";
+        if(el)el.innerHTML=html;
+        if(d.status==="completed"){ localStorage.removeItem(key); localStorage.removeItem(dataKey); if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;} if(modal)modal.classList.remove("show"); if(mob)mob.style.display="none"; }
+    }
+    let cached=null; try{cached=JSON.parse(localStorage.getItem(dataKey)||"null");}catch(e){}
+    if(cached && String(cached.order_number||"")===String(num)) render(cached);
+    if(openModal && modal && localStorage.getItem(key)) modal.classList.add("show");
+    if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;}
+    function tick(){
+        const n=localStorage.getItem(key); if(!n){ if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;} return; }
+        fetch("https://backend-1-osni.onrender.com/api/orders/lookup/"+encodeURIComponent(n)).then(r=>{if(!r.ok)throw new Error("not found");return r.json();}).then(d=>render(d)).catch(()=>{});
+    }
+    tick();
+    if(localStorage.getItem(key)) window._myOrderTimer=setInterval(tick,5000);
+}
+if(localStorage.getItem("faridkebab_last_order")) showMyOrder(false);
 
 
     document.querySelectorAll('.quick-nav-btn').forEach(btn => {
