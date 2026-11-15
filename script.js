@@ -61,6 +61,19 @@ function ensureFcmInit() {
   try {
     if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
     if (!window.__fcmMessaging) window.__fcmMessaging = firebase.messaging();
+    if (!window.__fcmOnMessageBound && window.__fcmMessaging && window.__fcmMessaging.onMessage) {
+      window.__fcmOnMessageBound = true;
+      window.__fcmMessaging.onMessage(function(payload){
+        try{
+          var n = (payload && payload.notification) || {};
+          var d = (payload && payload.data) || {};
+          var title = n.title || d.title || 'Aggiornamento ordine';
+          var body = n.body || d.body || '';
+          showOrderNotification(title, body, d.tag || ('order-' + (d.order_number || 'status')));
+          try { if (typeof showMyOrder === 'function') showMyOrder(false); } catch(e){}
+        }catch(e){ fcmWarn('onMessage handler error', e); }
+      });
+    }
     fcmLog('messaging ready');
     return window.__fcmMessaging;
   } catch (e) { fcmWarn('init error', e); return null; }
@@ -310,7 +323,13 @@ function registerFcmTokenForOrder(orderNumber) {
     }).catch(function(e){ fcmWarn('getToken/register error', e); return null; });
   } catch (e) { fcmWarn('registerFcmTokenForOrder exception', e); return Promise.resolve(null); }
 }
-document.addEventListener('visibilitychange', function(){ try{ updateEnableNotificationsButton(); }catch(e){} });
+document.addEventListener('visibilitychange', function(){
+  try{ updateEnableNotificationsButton(); }catch(e){}
+  try{ if (!document.hidden && localStorage.getItem('faridkebab_last_order') && typeof showMyOrder === 'function') showMyOrder(false); }catch(e){}
+});
+window.addEventListener('pageshow', function(){
+  try{ if (localStorage.getItem('faridkebab_last_order') && typeof showMyOrder === 'function') showMyOrder(false); }catch(e){}
+});
 
 
 // Active category tracking for quick nav
@@ -493,7 +512,24 @@ function showPromoPopup() {
 function requestOrderNotificationPermission(){
     try{ if('Notification' in window && Notification.permission==='default'){ Notification.requestPermission().catch(function(){}); } }catch(e){}
 }
+function showOrderToast(message){
+    try{
+        if(!message) return;
+        var t=document.getElementById('order-toast');
+        if(!t){
+            t=document.createElement('div');
+            t.id='order-toast';
+            t.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:10000;max-width:calc(100% - 24px);background:#222;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.25);font-size:14px;line-height:1.3;text-align:center;display:none;';
+            document.body.appendChild(t);
+        }
+        t.textContent=message;
+        t.style.display='block';
+        clearTimeout(window._orderToastTimer);
+        window._orderToastTimer=setTimeout(function(){ try{ t.style.display='none'; }catch(e){} }, 4000);
+    }catch(e){}
+}
 function showOrderNotification(title, body, tag){
+    try{ showOrderToast(body || title || 'Aggiornamento ordine'); }catch(e){}
     try{
         if(!('Notification' in window)) return;
         if(Notification.permission!=='granted') return;
@@ -683,7 +719,7 @@ function showMyOrder(openModal){
         }
         if(d.status==="completed" && prevStatus!=="completed" && !window._orderCompletedNotified){
             window._orderCompletedNotified=true;
-            showToast("Ordine completato!");
+            showOrderToast("Ordine completato!");
             playOrderCompleteSound();
         }
         window._lastRenderedOrderStatus=d.status;
