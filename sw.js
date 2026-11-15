@@ -1,4 +1,4 @@
-const CACHE = 'farid-kebab-v1';
+const CACHE = 'farid-kebab-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -23,4 +23,12 @@ self.addEventListener('fetch', e => {
     return;
   }
   e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE).then(cache => cache.put(e.request, c)); return r; })));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const target = (e.notification && e.notification.data && e.notification.data.url) || './index.html';
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) { if ('focus' in c) return c.focus(); }
+    if (clients.openWindow) return clients.openWindow(target);
+  }));
 });

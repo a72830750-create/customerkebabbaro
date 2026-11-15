@@ -230,6 +230,21 @@ function showPromoPopup() {
     popup.onclick = function(e) { if (e.target === popup) popup.classList.remove('show'); };
 }
 
+
+function requestOrderNotificationPermission(){
+    try{ if('Notification' in window && Notification.permission==='default'){ Notification.requestPermission().catch(function(){}); } }catch(e){}
+}
+function showOrderNotification(title, body, tag){
+    try{
+        if(!('Notification' in window)) return;
+        if(Notification.permission!=='granted') return;
+        var opts={ body: body, icon: './icon-192.png', badge: './icon-192.png', tag: tag||'farid-order', renotify: true, data:{ url:'./index.html' } };
+        if(navigator.serviceWorker && navigator.serviceWorker.ready){
+            navigator.serviceWorker.ready.then(function(reg){ reg.showNotification(title, opts); }).catch(function(){ try{ new Notification(title, opts); }catch(e){} });
+        } else { try{ new Notification(title, opts); }catch(e){} }
+    }catch(e){}
+}
+
 async function submitOrder() {
     const name = document.getElementById('customer-name')?.value.trim() || '';
     const phone = document.getElementById('customer-phone')?.value.trim() || '';
@@ -289,10 +304,14 @@ async function submitOrder() {
     }
 
     if (confirmTitle) confirmTitle.textContent = 'Ordine Confermato!';
-    if (confirmMessage) confirmMessage.textContent = 'Grazie, ' + name + '!\n\n' + summary + '\n\nTotal: €' + total.toFixed(2) + '\n' + (orderType === 'delivery' ? 'Consegna a: ' + address : 'Ritiro') + (notes ? '\nNote: ' + notes : '');
+    const leaveMsg = 'Puoi uscire: riceverai notifiche sullo stato del tuo ordine.';
+    if (confirmMessage) confirmMessage.textContent = 'Grazie, ' + name + '!\n\n' + summary + '\n\nTotal: €' + total.toFixed(2) + '\n' + (orderType === 'delivery' ? 'Consegna a: ' + address : 'Ritiro') + (notes ? '\nNote: ' + notes : '') + '\n\n' + leaveMsg;
     if (confirmModal) confirmModal.classList.add('show');
 
     localStorage.setItem("faridkebab_last_order", order.order_number);
+    try{ localStorage.removeItem('faridkebab_last_notified_status'); localStorage.removeItem('faridkebab_last_order_data'); }catch(e){}
+    requestOrderNotificationPermission();
+    showOrderNotification('Ordine inviato', leaveMsg, 'order-' + order.order_number);
     cart = [];
     saveCart();
     updateCartUI();
@@ -387,7 +406,15 @@ function showMyOrder(openModal){
         if(!d) return;
         const statuses=["new","accepted","preparing","ready","out_for_delivery","completed"]; const rejected=d.status==="rejected"; const idx=rejected?-1:statuses.indexOf(d.status);
         const labels={new:"Nuovo",accepted:"Accettato",preparing:"In preparazione",ready:"Pronto",out_for_delivery:"In consegna",completed:"Completato",rejected:"Rifiutato"};
+        const notifyMsgs={new:"Ordine ricevuto",accepted:"Ordine accettato",preparing:"Ordine in preparazione",ready:"Ordine pronto",out_for_delivery:"Ordine in consegna",completed:"Ordine completato!",rejected:"Ordine rifiutato"};
         const prevStatus=(window._lastRenderedOrderStatus||"");
+        const notifiedKey='faridkebab_last_notified_status';
+        const lastNotified=localStorage.getItem(notifiedKey)||'';
+        if(d.status && d.status!==lastNotified){
+            try{ localStorage.setItem(notifiedKey, d.status); }catch(e){}
+            const msg=notifyMsgs[d.status]||labels[d.status]||d.status;
+            showOrderNotification('Stato ordine ' + (d.order_number||num||''), msg, 'order-' + (d.order_number||num||'status'));
+        }
         if(d.status==="completed" && prevStatus!=="completed" && !window._orderCompletedNotified){
             window._orderCompletedNotified=true;
             showToast("Ordine completato!");
@@ -407,7 +434,9 @@ function showMyOrder(openModal){
         if(d.status==="completed"){
             if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;}
             localStorage.removeItem(key); localStorage.removeItem(dataKey);
+            try{ localStorage.removeItem(notifiedKey); }catch(e){}
             window._lastRenderedOrderStatus=null;
+            window._orderCompletedNotified=false;
             // keep UI visible (status shown/reset to out_for_delivery) until closed; reset on next open
         }
     }
