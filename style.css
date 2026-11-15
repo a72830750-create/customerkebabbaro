@@ -881,3 +881,18 @@ section[id] h3::after {
 
 .badge { position:absolute; top:8px; right:8px; background:var(--primary); color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:700; }
 .dish-card { position: relative; }
+
+
+/* Order status timeline */
+.order-timeline{display:flex;gap:6px;align-items:flex-start;overflow-x:auto;padding:8px 0 4px;margin-bottom:10px}
+.tl-step{display:flex;flex-direction:column;align-items:center;min-width:64px;font-size:11px;color:#999;text-align:center}
+.tl-dot{width:12px;height:12px;border-radius:50%;background:#ddd;margin-bottom:4px}
+.tl-step.done .tl-dot{background:#4caf50}
+.tl-step.current .tl-dot{background:var(--primary,#B94E35);box-shadow:0 0 0 4px rgba(185,78,53,.15)}
+.tl-step.done .tl-label,.tl-step.current .tl-label{color:#222;font-weight:600}
+.tl-step.rejected .tl-dot{background:#c0392b}
+.order-current{font-weight:700;font-size:16px;margin:6px 0}
+.order-eta{color:#555;margin-bottom:8px}
+#my-order-status .order-items{list-style:none;padding:0;margin:8px 0}
+#my-order-status .order-items li{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;font-size:14px}
+#my-order-status .order-total{font-weight:700;font-size:16px;margin-top:8px;text-align:right}

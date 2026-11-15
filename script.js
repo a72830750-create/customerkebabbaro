@@ -363,30 +363,56 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch(e) { cart = []; }
 
     initQuickNavActive();
-    const mobBtn=document.getElementById("my-order-btn"); if(mobBtn) mobBtn.addEventListener("click", function(){ showMyOrder(true); });
+    const mobBtn=document.getElementById("my-order-btn"); if(mobBtn){ mobBtn.style.display="flex"; mobBtn.addEventListener("click", function(){ showMyOrder(true); }); }
 
 function showMyOrder(openModal){
     const key="faridkebab_last_order"; const dataKey="faridkebab_last_order_data";
     const num=localStorage.getItem(key); const mob=document.getElementById("my-order-btn"); const modal=document.getElementById("my-order-modal"); const el=document.getElementById("my-order-status");
-    if(!num){ if(mob)mob.style.display="none"; if(modal)modal.classList.remove("show"); if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;} return; }
+    if(!num){
+        if(openModal){ alert("Per favore, ordina qualcosa prima."); }
+        if(mob)mob.style.display="none"; if(modal)modal.classList.remove("show"); if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;} return;
+    }
     if(mob)mob.style.display="flex";
+    if(openModal && modal) modal.classList.add("show");
+    function playOrderCompleteSound(){
+        try{
+            const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+            if(!window._orderAudioCtx) window._orderAudioCtx=new C();
+            const ctx=window._orderAudioCtx; if(ctx.state==="suspended") ctx.resume();
+            const beep=(t,f)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.value=f;o.connect(g);g.connect(ctx.destination);g.gain.setValueAtTime(0.001,t);g.gain.exponentialRampToValueAtTime(0.2,t+0.02);g.gain.exponentialRampToValueAtTime(0.001,t+0.18);o.start(t);o.stop(t+0.2);};
+            beep(ctx.currentTime,880); beep(ctx.currentTime+0.22,1174);
+        }catch(e){}
+    }
     function render(d){
         if(!d) return;
-        try{localStorage.setItem(dataKey,JSON.stringify(d));}catch(e){}
         const statuses=["new","accepted","preparing","ready","out_for_delivery","completed"]; const rejected=d.status==="rejected"; const idx=rejected?-1:statuses.indexOf(d.status);
         const labels={new:"Nuovo",accepted:"Accettato",preparing:"In preparazione",ready:"Pronto",out_for_delivery:"In consegna",completed:"Completato",rejected:"Rifiutato"};
-        let html="<div class='order-timeline'>";statuses.forEach((s,i)=>{const done=!rejected&&i<=idx;const cur=!rejected&&i===idx;html+="<div class='tl-step"+(done?" done":"")+(cur?" current":"")+"'><span class='tl-dot'></span><span class='tl-label'>"+labels[s]+"</span></div>";});if(rejected)html+="<div class='tl-step rejected current'><span class='tl-dot'></span><span class='tl-label'>"+labels.rejected+"</span></div>";html+="</div>";
-        html+="<div class='order-current'>"+(labels[d.status]||d.status)+"</div>";
-        const eta=d.order_type==="pickup"? (d.pickup_time||"ASAP") : (d.delivery_timing==="later"?(d.delivery_time||"ASAP"):"ASAP");
-        html+="<div class='order-eta'>"+(d.order_type==="pickup"?"Ritiro: ":"Consegna: ")+eta+"</div>";
-        if(d.items&&d.items.length){html+="<ul class='order-items'>"+d.items.map(i=>"<li>"+i.qty+"x "+i.name+" <span>EUR"+(Number(i.qty)*Number(i.price)).toFixed(2)+"</span></li>").join("")+"</ul>";}
-        html+="<div class='order-total'>EUR"+Number(d.total||0).toFixed(2)+"</div>";
+        const prevStatus=(window._lastRenderedOrderStatus||"");
+        if(d.status==="completed" && prevStatus!=="completed" && !window._orderCompletedNotified){
+            window._orderCompletedNotified=true;
+            showToast("Ordine completato!");
+            playOrderCompleteSound();
+        }
+        window._lastRenderedOrderStatus=d.status;
+        const dRender=(d.status==="completed")?Object.assign({},d,{status:"out_for_delivery"}):d;
+        const idxR=rejected?-1:statuses.indexOf(dRender.status);
+        let html="<div class='order-timeline'>";statuses.forEach((s,i)=>{const done=!rejected&&i<=idxR;const cur=!rejected&&i===idxR;html+="<div class='tl-step"+(done?" done":"")+(cur?" current":"")+"'><span class='tl-dot'></span><span class='tl-label'>"+labels[s]+"</span></div>";});if(rejected)html+="<div class='tl-step rejected current'><span class='tl-dot'></span><span class='tl-label'>"+labels.rejected+"</span></div>";html+="</div>";
+        html+="<div class='order-current'>"+(labels[dRender.status]||dRender.status)+"</div>";
+        const eta=dRender.order_type==="pickup"? (dRender.pickup_time||"ASAP") : (dRender.delivery_timing==="later"?(dRender.delivery_time||"ASAP"):"ASAP");
+        html+="<div class='order-eta'>"+(dRender.order_type==="pickup"?"Ritiro: ":"Consegna: ")+eta+"</div>";
+        if(dRender.items&&dRender.items.length){html+="<ul class='order-items'>"+dRender.items.map(i=>"<li>"+i.qty+"x "+i.name+" <span>EUR"+(Number(i.qty)*Number(i.price)).toFixed(2)+"</span></li>").join("")+"</ul>";}
+        html+="<div class='order-total'>EUR"+Number(dRender.total||0).toFixed(2)+"</div>";
         if(el)el.innerHTML=html;
-        if(d.status==="completed"){ localStorage.removeItem(key); localStorage.removeItem(dataKey); if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;} if(modal)modal.classList.remove("show"); if(mob)mob.style.display="none"; }
+        if(d.status!=="completed"){ try{localStorage.setItem(dataKey,JSON.stringify(d));}catch(e){} }
+        if(d.status==="completed"){
+            if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;}
+            localStorage.removeItem(key); localStorage.removeItem(dataKey);
+            window._lastRenderedOrderStatus=null;
+            // keep UI visible (status shown/reset to out_for_delivery) until closed; reset on next open
+        }
     }
     let cached=null; try{cached=JSON.parse(localStorage.getItem(dataKey)||"null");}catch(e){}
     if(cached && String(cached.order_number||"")===String(num)) render(cached);
-    if(openModal && modal && localStorage.getItem(key)) modal.classList.add("show");
     if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;}
     function tick(){
         const n=localStorage.getItem(key); if(!n){ if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;} return; }
