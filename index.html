@@ -311,6 +311,7 @@
             <div class="confirm-icon" id="confirm-icon">✓</div>
             <h3 id="confirm-title">Ordine Confermato!</h3>
             <p id="confirm-message"></p>
+            <div id="ios-a2hs-confirm" class="ios-a2hs-tip" style="display:none;text-align:left;"></div>
             <button class="modal-add" id="confirm-ok" style="margin:0 auto;">Fatto</button>
         </div>
     </div>
@@ -390,7 +391,9 @@ buildTimes("delivery-time");buildTimes("pickup-time");
 
 
 
-<div id="my-order-modal" class="modal"><div class="modal-content order-status-modal-content"><button class="modal-close" id="my-order-close" aria-label="Chiudi">&times;</button><h3>Stato Ordine</h3><button id="enable-order-notifications-btn" type="button" class="modal-add" style="display:none;margin:8px 0 12px;width:100%;">Attiva notifiche ordine</button><div id="my-order-status"></div></div></div>
+<div id="my-order-modal" class="modal"><div class="modal-content order-status-modal-content"><button class="modal-close" id="my-order-close" aria-label="Chiudi">&times;</button><h3>Stato Ordine</h3><button id="enable-order-notifications-btn" type="button" class="modal-add" style="display:none;margin:8px 0 12px;width:100%;">Attiva notifiche ordine</button><div id="ios-a2hs-order" class="ios-a2hs-tip" style="display:none;"></div><div id="my-order-status"></div></div></div>
+
+<div id="ios-a2hs-banner" class="ios-a2hs-tip ios-a2hs-banner" style="display:none;"></div>
 
 <script>
 (function(){

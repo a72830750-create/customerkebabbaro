@@ -104,6 +104,76 @@ function requestNotificationPermissionOnGesture() {
     return __fcmPermissionPromise;
   } catch(e){ fcmWarn('permission gesture error', e); return Promise.resolve('error'); }
 }
+// ===== iOS A2HS fine-print guide =====
+function isIosDevice() {
+  try {
+    var ua = navigator.userAgent || '';
+    var iOS = /iPad|iPhone|iPod/.test(ua);
+    var iPadOS = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    return iOS || iPadOS;
+  } catch(e){ return false; }
+}
+function isStandalonePwa() {
+  try {
+    return !!(window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches));
+  } catch(e){ return false; }
+}
+function shouldShowIosA2hsGuide() {
+  try {
+    if (isStandalonePwa()) return false;
+    if (!isIosDevice()) return false;
+    if (localStorage.getItem('ios_a2hs_guide_dismissed') === '1') return false;
+    return true;
+  } catch(e){ return false; }
+}
+function iosA2hsGuideHtml() {
+  return '' +
+    '<button type="button" class="ios-a2hs-close" aria-label="Chiudi">&times;</button>' +
+    '<div><strong>\uD83D\uDCF2 Vuoi ricevere notifiche sull\'ordine su iPhone? Aggiungi l\'app alla schermata Home:</strong></div>' +
+    '<ul>' +
+      '<li><strong>Safari:</strong> tocca l\'icona Condividi (\u2B06\uFE0F) nella barra in basso \u2192 scorri e tocca "Aggiungi a schermata Home" (\u2795) \u2192 "Aggiungi".</li>' +
+      '<li><strong>Chrome:</strong> tocca l\'icona Condividi (\u2B06\uFE0F) in alto a destra accanto alla barra dell\'indirizzo (oppure apri il link in Safari) \u2192 "Aggiungi a schermata Home" (\u2795) \u2192 "Aggiungi".</li>' +
+    '</ul>' +
+    '<div class="ios-a2hs-footer">Poi apri l\'icona Farid Kebab dalla schermata Home per attivare le notifiche.</div>';
+}
+function renderIosA2hsTips() {
+  try {
+    var show = shouldShowIosA2hsGuide();
+    var ids = ['ios-a2hs-banner', 'ios-a2hs-order', 'ios-a2hs-confirm'];
+    ids.forEach(function(id){
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (!show) { el.style.display = 'none'; return; }
+      if (!el._rendered) {
+        el.innerHTML = iosA2hsGuideHtml();
+        el._rendered = true;
+        var close = el.querySelector('.ios-a2hs-close');
+        if (close) {
+          close.addEventListener('click', function(ev){
+            try { ev.preventDefault(); ev.stopPropagation(); } catch(e){}
+            try { localStorage.setItem('ios_a2hs_guide_dismissed', '1'); } catch(e){}
+            renderIosA2hsTips();
+          });
+        }
+      }
+      // banner shows when applicable; modal tips shown on demand via showIosA2hsInContext
+      el.style.display = (id === 'ios-a2hs-banner') ? 'block' : 'none';
+    });
+  } catch(e){}
+}
+function showIosA2hsInContext(context) {
+  try {
+    renderIosA2hsTips();
+    if (!shouldShowIosA2hsGuide()) return;
+    var id = context === 'confirm' ? 'ios-a2hs-confirm' : (context === 'order' ? 'ios-a2hs-order' : null);
+    if (!id) return;
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+    var banner = document.getElementById('ios-a2hs-banner');
+    if (banner) banner.style.display = 'block';
+  } catch(e){}
+}
+
 function updateEnableNotificationsButton() {
   try {
     var supported = ('Notification' in window) && window.isSecureContext;
@@ -128,11 +198,14 @@ function updateEnableNotificationsButton() {
         btn.addEventListener('click', function(){ enableOrderNotificationsFromGesture(); });
       }
     });
+    renderIosA2hsTips();
   } catch(e){ fcmWarn('updateEnableNotificationsButton error', e); }
 }
 function enableOrderNotificationsFromGesture() {
   fcmLog('enable notifications button clicked');
+  if (shouldShowIosA2hsGuide()) { showIosA2hsInContext('order'); }
   if (!('Notification' in window)) { fcmWarn('Notification API unavailable'); return; }
+  // On iOS browser (not standalone) web push requires A2HS; still try prompt but show guide.
   if (Notification.permission === 'denied') {
     try { alert('Notifiche bloccate. Abilitale dalle impostazioni del browser (Safari: Impostazioni sito, Chrome: icona lucchetto/notifiche).'); } catch(e){}
     updateEnableNotificationsButton();
@@ -429,6 +502,7 @@ async function submitOrder() {
     const leaveMsg = 'Puoi uscire: riceverai notifiche sullo stato del tuo ordine.';
     if (confirmMessage) confirmMessage.textContent = 'Grazie, ' + name + '!\n\n' + summary + '\n\nTotale: €' + total.toFixed(2) + '\nRitiro: ' + (pickupTime || 'ASAP') + (notes ? '\nNote: ' + notes : '') + '\n\n' + leaveMsg;
     if (confirmModal) confirmModal.classList.add('show');
+    try { if (shouldShowIosA2hsGuide && shouldShowIosA2hsGuide()) showIosA2hsInContext('confirm'); } catch(e){}
 
     localStorage.setItem("faridkebab_last_order", order.order_number);
     try{ localStorage.removeItem('faridkebab_last_notified_status'); localStorage.removeItem('faridkebab_last_order_data'); }catch(e){}
@@ -590,6 +664,7 @@ function showMyOrder(openModal){
     if(localStorage.getItem(key)) window._myOrderTimer=setInterval(tick,5000);
 }
 try{ updateEnableNotificationsButton(); }catch(e){}
+try{ renderIosA2hsTips(); }catch(e){}
 try{ updateEnableNotificationsButton(); }catch(e){}
 if(localStorage.getItem("faridkebab_last_order")) { try{ registerFcmTokenForOrder(localStorage.getItem("faridkebab_last_order")); }catch(e){} showMyOrder(false); }
 
