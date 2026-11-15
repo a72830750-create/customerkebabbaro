@@ -104,7 +104,10 @@ function requestNotificationPermissionOnGesture() {
     return __fcmPermissionPromise;
   } catch(e){ fcmWarn('permission gesture error', e); return Promise.resolve('error'); }
 }
-// ===== iOS A2HS fine-print guide =====
+// ===== Notification popup & iOS A2HS guide =====
+var __notifPopupSessionDismissed = false;
+var __notifPopupTimer = null;
+
 function isIosDevice() {
   try {
     var ua = navigator.userAgent || '';
@@ -118,17 +121,8 @@ function isStandalonePwa() {
     return !!(window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches));
   } catch(e){ return false; }
 }
-function shouldShowIosA2hsGuide() {
-  try {
-    if (isStandalonePwa()) return false;
-    if (!isIosDevice()) return false;
-    if (localStorage.getItem('ios_a2hs_guide_dismissed') === '1') return false;
-    return true;
-  } catch(e){ return false; }
-}
 function iosA2hsGuideHtml() {
   return '' +
-    '<button type="button" class="ios-a2hs-close" aria-label="Chiudi">&times;</button>' +
     '<div><strong>\uD83D\uDCF2 Vuoi ricevere notifiche sull\'ordine su iPhone? Aggiungi l\'app alla schermata Home:</strong></div>' +
     '<ul>' +
       '<li><strong>Safari:</strong> tocca l\'icona Condividi (\u2B06\uFE0F) nella barra in basso \u2192 scorri e tocca "Aggiungi a schermata Home" (\u2795) \u2192 "Aggiungi".</li>' +
@@ -136,41 +130,94 @@ function iosA2hsGuideHtml() {
     '</ul>' +
     '<div class="ios-a2hs-footer">Poi apri l\'icona Farid Kebab dalla schermata Home per attivare le notifiche.</div>';
 }
-function renderIosA2hsTips() {
+function isNotifPopupDismissed() {
+  if (__notifPopupSessionDismissed) return true;
+  try { return sessionStorage.getItem('notif_popup_dismissed') === '1'; } catch(e){ return false; }
+}
+function dismissNotifPopup() {
+  __notifPopupSessionDismissed = true;
+  try { sessionStorage.setItem('notif_popup_dismissed', '1'); } catch(e){}
+  var popup = document.getElementById('notification-popup');
+  if (popup) popup.style.display = 'none';
+}
+function shouldShowIosInstallGuide() {
+  try { return isIosDevice() && !isStandalonePwa(); } catch(e){ return false; }
+}
+function shouldShowNotificationPopup() {
   try {
-    var show = shouldShowIosA2hsGuide();
-    var ids = ['ios-a2hs-banner', 'ios-a2hs-order', 'ios-a2hs-confirm'];
-    ids.forEach(function(id){
-      var el = document.getElementById(id);
-      if (!el) return;
-      if (!show) { el.style.display = 'none'; return; }
-      if (!el._rendered) {
-        el.innerHTML = iosA2hsGuideHtml();
-        el._rendered = true;
-        var close = el.querySelector('.ios-a2hs-close');
-        if (close) {
-          close.addEventListener('click', function(ev){
-            try { ev.preventDefault(); ev.stopPropagation(); } catch(e){}
-            try { localStorage.setItem('ios_a2hs_guide_dismissed', '1'); } catch(e){}
-            renderIosA2hsTips();
-          });
-        }
+    if (isNotifPopupDismissed()) return false;
+    if (('Notification' in window) && Notification.permission === 'granted') return false;
+    if (shouldShowIosInstallGuide()) return true; // iOS browser: show tutorial
+    // Android/Desktop/iOS standalone: show enable button when supported and not granted
+    if (('Notification' in window) && window.isSecureContext && Notification.permission !== 'granted') return true;
+    return false;
+  } catch(e){ return false; }
+}
+function updateNotificationPopup() {
+  try {
+    var popup = document.getElementById('notification-popup');
+    var btn = document.getElementById('enable-notifications-popup-btn');
+    var guide = document.getElementById('notification-popup-ios-guide');
+    var close = document.getElementById('notification-popup-close');
+    if (!popup) return;
+    if (close && !close._bound) { close._bound = true; close.addEventListener('click', function(){ dismissNotifPopup(); }); }
+
+    // Auto-hide once granted
+    if (('Notification' in window) && Notification.permission === 'granted') { popup.style.display = 'none'; return; }
+    if (isNotifPopupDismissed()) { popup.style.display = 'none'; return; }
+
+    var iosInstallGuide = shouldShowIosInstallGuide();
+    var iosStandalone = isIosDevice() && isStandalonePwa();
+    var supported = ('Notification' in window) && window.isSecureContext;
+
+    if (guide) {
+      if (iosInstallGuide) {
+        if (!guide._rendered) { guide.innerHTML = iosA2hsGuideHtml(); guide._rendered = true; }
+        guide.style.display = 'block';
+      } else {
+        guide.style.display = 'none';
       }
-      // banner shows when applicable; modal tips shown on demand via showIosA2hsInContext
-      el.style.display = (id === 'ios-a2hs-banner') ? 'block' : 'none';
-    });
+    }
+
+    if (btn) {
+      var showBtn = !iosInstallGuide && supported && Notification.permission !== 'granted';
+      // iOS standalone: normal enable button; Android/Desktop: normal enable button
+      btn.style.display = showBtn ? 'block' : 'none';
+      btn.disabled = false;
+      if (Notification.permission === 'denied') {
+        btn.textContent = '🔔 Notifiche bloccate';
+        btn.title = 'Abilita le notifiche dalle impostazioni del browser (Safari/Chrome)';
+      } else {
+        btn.textContent = '🔔 Attiva notifiche ordine';
+        btn.title = '';
+      }
+      if (!btn._fcmBound) {
+        btn._fcmBound = true;
+        btn.addEventListener('click', function(){ enableOrderNotificationsFromGesture(); });
+      }
+    }
+
+    // Keep visible state as-is if already shown; caller decides when to show
+  } catch(e){ fcmWarn('updateNotificationPopup error', e); }
+}
+function showNotificationPopup(force) {
+  try {
+    updateNotificationPopup();
+    if (!force && !shouldShowNotificationPopup()) return;
+    var popup = document.getElementById('notification-popup');
+    if (!popup) return;
+    // if nothing to show inside, keep hidden
+    var btn = document.getElementById('enable-notifications-popup-btn');
+    var guide = document.getElementById('notification-popup-ios-guide');
+    var hasContent = (btn && btn.style.display !== 'none') || (guide && guide.style.display !== 'none');
+    if (!hasContent) { popup.style.display = 'none'; return; }
+    popup.style.display = 'block';
   } catch(e){}
 }
-function showIosA2hsInContext(context) {
+function scheduleNotificationPopup(delayMs) {
   try {
-    renderIosA2hsTips();
-    if (!shouldShowIosA2hsGuide()) return;
-    var id = context === 'confirm' ? 'ios-a2hs-confirm' : (context === 'order' ? 'ios-a2hs-order' : null);
-    if (!id) return;
-    var el = document.getElementById(id);
-    if (el) el.style.display = 'block';
-    var banner = document.getElementById('ios-a2hs-banner');
-    if (banner) banner.style.display = 'block';
+    if (__notifPopupTimer) { clearTimeout(__notifPopupTimer); __notifPopupTimer = null; }
+    __notifPopupTimer = setTimeout(function(){ showNotificationPopup(false); }, typeof delayMs === 'number' ? delayMs : 2000);
   } catch(e){}
 }
 
@@ -180,17 +227,19 @@ function updateEnableNotificationsButton() {
     var show = supported && Notification.permission !== 'granted';
     var btns = [
       document.getElementById('enable-order-notifications-btn'),
-      document.getElementById('enable-notifications-banner-btn')
+      document.getElementById('enable-notifications-banner-btn'),
+      document.getElementById('enable-notifications-popup-btn')
     ];
     btns.forEach(function(btn){
       if (!btn) return;
-      btn.style.display = show ? 'inline-block' : 'none';
+      var isPopup = btn.id === 'enable-notifications-popup-btn';
+      if (!isPopup) btn.style.display = show ? 'inline-block' : 'none';
       btn.disabled = false;
       if (Notification.permission === 'denied') {
-        btn.textContent = 'Notifiche bloccate';
+        btn.textContent = isPopup ? '🔔 Notifiche bloccate' : 'Notifiche bloccate';
         btn.title = 'Abilita le notifiche dalle impostazioni del browser (Safari/Chrome)';
       } else {
-        btn.textContent = 'Attiva notifiche';
+        btn.textContent = isPopup ? '🔔 Attiva notifiche ordine' : 'Attiva notifiche';
         btn.title = '';
       }
       if (!btn._fcmBound) {
@@ -198,14 +247,14 @@ function updateEnableNotificationsButton() {
         btn.addEventListener('click', function(){ enableOrderNotificationsFromGesture(); });
       }
     });
-    renderIosA2hsTips();
+    updateNotificationPopup();
   } catch(e){ fcmWarn('updateEnableNotificationsButton error', e); }
 }
 function enableOrderNotificationsFromGesture() {
   fcmLog('enable notifications button clicked');
-  if (shouldShowIosA2hsGuide()) { showIosA2hsInContext('order'); }
+  // Show popup context (guide on iOS browser) when relevant
+  try { if (shouldShowIosInstallGuide()) showNotificationPopup(true); } catch(e){}
   if (!('Notification' in window)) { fcmWarn('Notification API unavailable'); return; }
-  // On iOS browser (not standalone) web push requires A2HS; still try prompt but show guide.
   if (Notification.permission === 'denied') {
     try { alert('Notifiche bloccate. Abilitale dalle impostazioni del browser (Safari: Impostazioni sito, Chrome: icona lucchetto/notifiche).'); } catch(e){}
     updateEnableNotificationsButton();
@@ -213,12 +262,16 @@ function enableOrderNotificationsFromGesture() {
   }
   requestNotificationPermissionOnGesture().then(function(perm){
     updateEnableNotificationsButton();
-    if (perm !== 'granted') { fcmWarn('permission not granted; token not registered', perm); return; }
-    fcmLog('notifications enabled by user gesture');
-    var num = null;
-    try { num = localStorage.getItem('faridkebab_last_order'); } catch(e){}
-    if (!num) { fcmWarn('no last order found for token registration (permission granted; will register on next order/tracking)'); return; }
-    registerFcmTokenForOrder(num);
+    if (perm === 'granted') {
+      fcmLog('notifications enabled by user gesture');
+      try { dismissNotifPopup(); } catch(e){}
+      var num = null;
+      try { num = localStorage.getItem('faridkebab_last_order'); } catch(e){}
+      if (!num) { fcmWarn('no last order found for token registration (permission granted; will register on next order/tracking)'); return; }
+      registerFcmTokenForOrder(num);
+      return;
+    }
+    fcmWarn('permission not granted; token not registered', perm);
   }).catch(function(e){ fcmWarn('enable notifications flow error', e); });
 }
 function registerFcmTokenForOrder(orderNumber) {
@@ -502,7 +555,7 @@ async function submitOrder() {
     const leaveMsg = 'Puoi uscire: riceverai notifiche sullo stato del tuo ordine.';
     if (confirmMessage) confirmMessage.textContent = 'Grazie, ' + name + '!\n\n' + summary + '\n\nTotale: €' + total.toFixed(2) + '\nRitiro: ' + (pickupTime || 'ASAP') + (notes ? '\nNote: ' + notes : '') + '\n\n' + leaveMsg;
     if (confirmModal) confirmModal.classList.add('show');
-    try { if (shouldShowIosA2hsGuide && shouldShowIosA2hsGuide()) showIosA2hsInContext('confirm'); } catch(e){}
+    try { showNotificationPopup(true); } catch(e){}
 
     localStorage.setItem("faridkebab_last_order", order.order_number);
     try{ localStorage.removeItem('faridkebab_last_notified_status'); localStorage.removeItem('faridkebab_last_order_data'); }catch(e){}
@@ -664,8 +717,7 @@ function showMyOrder(openModal){
     if(localStorage.getItem(key)) window._myOrderTimer=setInterval(tick,5000);
 }
 try{ updateEnableNotificationsButton(); }catch(e){}
-try{ renderIosA2hsTips(); }catch(e){}
-try{ updateEnableNotificationsButton(); }catch(e){}
+try{ scheduleNotificationPopup(2000); }catch(e){}
 if(localStorage.getItem("faridkebab_last_order")) { try{ registerFcmTokenForOrder(localStorage.getItem("faridkebab_last_order")); }catch(e){} showMyOrder(false); }
 
 

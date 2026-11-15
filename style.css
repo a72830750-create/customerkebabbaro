@@ -888,15 +888,16 @@ section[id] h3::after {
 .dish-card { position: relative; }
 
 
-/* iOS Add to Home Screen / notifications guide */
-.ios-a2hs-tip{display:none;margin:8px 0;padding:8px 10px;padding-right:24px;border:1px solid #e5e0d6;border-radius:8px;background:#faf8f4;color:#6b655a;font-size:11px;line-height:1.4;position:relative;}
-.ios-a2hs-tip.ios-a2hs-banner{position:fixed;left:10px;right:10px;bottom:10px;margin:0;z-index:9998;box-shadow:0 4px 14px rgba(0,0,0,.08);max-width:520px;}
-.ios-a2hs-tip strong{font-size:11px;color:#4a453c;font-weight:600;}
-.ios-a2hs-tip ul{margin:4px 0 2px;padding-left:16px;}
-.ios-a2hs-tip li{margin:2px 0;}
-.ios-a2hs-tip .ios-a2hs-footer{margin-top:4px;color:#7a7468;}
-.ios-a2hs-tip .ios-a2hs-close{position:absolute;top:4px;right:6px;border:none;background:transparent;color:#8a8478;font-size:14px;line-height:1;cursor:pointer;padding:2px 4px;}
-@media (min-width:600px){.ios-a2hs-tip{font-size:12px;}.ios-a2hs-tip.ios-a2hs-banner{left:50%;right:auto;transform:translateX(-50%);width:calc(100% - 20px);}}
+/* Notification popup & iOS A2HS guide */
+.notification-popup{display:none;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9999;width:calc(100% - 24px);max-width:420px;background:#fff;border:1px solid #e5e0d6;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:12px 14px;padding-right:34px;box-sizing:border-box;}
+.notification-popup-close{position:absolute;top:6px;right:8px;border:none;background:transparent;color:#8a8478;font-size:18px;line-height:1;cursor:pointer;padding:2px 4px;}
+.notification-popup-btn{width:100%;margin:0;font-size:14px;padding:10px 12px;}
+.notification-popup-guide{color:#6b655a;font-size:11px;line-height:1.45;}
+.notification-popup-guide strong{font-size:11px;color:#4a453c;font-weight:600;}
+.notification-popup-guide ul{margin:6px 0 4px;padding-left:16px;}
+.notification-popup-guide li{margin:3px 0;}
+.notification-popup-guide .ios-a2hs-footer{margin-top:4px;color:#7a7468;}
+@media (min-width:600px){.notification-popup-guide{font-size:12px;}}
 .order-timeline{display:flex;gap:6px;align-items:flex-start;overflow-x:auto;padding:8px 0 4px;margin-bottom:10px}
 .tl-step{display:flex;flex-direction:column;align-items:center;min-width:64px;font-size:11px;color:#999;text-align:center}
 .tl-dot{width:12px;height:12px;border-radius:50%;background:#ddd;margin-bottom:4px}
