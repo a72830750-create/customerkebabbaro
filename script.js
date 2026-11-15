@@ -106,25 +106,45 @@ function requestNotificationPermissionOnGesture() {
 }
 function updateEnableNotificationsButton() {
   try {
-    var btn = document.getElementById('enable-order-notifications-btn');
-    if (!btn) return;
-    var show = ('Notification' in window) && Notification.permission !== 'granted';
-    btn.style.display = show ? 'block' : 'none';
-    btn.disabled = false;
-    if (show && !btn._fcmBound) {
-      btn._fcmBound = true;
-      btn.addEventListener('click', function(){ enableOrderNotificationsFromGesture(); });
-    }
+    var supported = ('Notification' in window) && window.isSecureContext;
+    var show = supported && Notification.permission !== 'granted';
+    var btns = [
+      document.getElementById('enable-order-notifications-btn'),
+      document.getElementById('enable-notifications-banner-btn')
+    ];
+    btns.forEach(function(btn){
+      if (!btn) return;
+      btn.style.display = show ? 'inline-block' : 'none';
+      btn.disabled = false;
+      if (Notification.permission === 'denied') {
+        btn.textContent = 'Notifiche bloccate';
+        btn.title = 'Abilita le notifiche dalle impostazioni del browser (Safari/Chrome)';
+      } else {
+        btn.textContent = 'Attiva notifiche';
+        btn.title = '';
+      }
+      if (!btn._fcmBound) {
+        btn._fcmBound = true;
+        btn.addEventListener('click', function(){ enableOrderNotificationsFromGesture(); });
+      }
+    });
   } catch(e){ fcmWarn('updateEnableNotificationsButton error', e); }
 }
 function enableOrderNotificationsFromGesture() {
   fcmLog('enable notifications button clicked');
+  if (!('Notification' in window)) { fcmWarn('Notification API unavailable'); return; }
+  if (Notification.permission === 'denied') {
+    try { alert('Notifiche bloccate. Abilitale dalle impostazioni del browser (Safari: Impostazioni sito, Chrome: icona lucchetto/notifiche).'); } catch(e){}
+    updateEnableNotificationsButton();
+    return;
+  }
   requestNotificationPermissionOnGesture().then(function(perm){
     updateEnableNotificationsButton();
-    if (perm !== 'granted') { fcmWarn('permission not granted; token not registered'); return; }
+    if (perm !== 'granted') { fcmWarn('permission not granted; token not registered', perm); return; }
+    fcmLog('notifications enabled by user gesture');
     var num = null;
     try { num = localStorage.getItem('faridkebab_last_order'); } catch(e){}
-    if (!num) { fcmWarn('no last order found for token registration'); return; }
+    if (!num) { fcmWarn('no last order found for token registration (permission granted; will register on next order/tracking)'); return; }
     registerFcmTokenForOrder(num);
   }).catch(function(e){ fcmWarn('enable notifications flow error', e); });
 }
@@ -505,12 +525,10 @@ function showMyOrder(openModal){
     if(mob)mob.style.display="flex";
     if(openModal && modal) modal.classList.add("show");
     try{
-        var enBtn = document.getElementById('enable-order-notifications-btn');
-        if (enBtn && !enBtn._fcmBound) { enBtn._fcmBound = true; enBtn.addEventListener('click', function(){ enableOrderNotificationsFromGesture(); }); }
-        updateEnableNotificationsButton();
         var closeBtn = document.getElementById('my-order-close');
         if (closeBtn && !closeBtn._bound) { closeBtn._bound = true; closeBtn.addEventListener('click', function(){ if(modal) modal.classList.remove('show'); }); }
         if (modal && !modal._bound) { modal._bound = true; modal.addEventListener('click', function(e){ if(e.target===modal) modal.classList.remove('show'); }); }
+        updateEnableNotificationsButton();
     }catch(e){ fcmWarn('enable notifications button setup error', e); }
     function playOrderCompleteSound(){
         try{
