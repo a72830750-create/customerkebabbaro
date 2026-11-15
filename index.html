@@ -467,6 +467,9 @@
       updateType();
     })();
     </script>
+    <script src="firebase-config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
     <script src="script.js"></script>
 
 <script>
@@ -483,9 +486,25 @@ buildTimes("delivery-time");buildTimes("pickup-time");
 <div id="my-order-modal" class="modal"><div class="modal-content"><h3>Order Status</h3><div id="my-order-status"></div></div></div>
 
 <script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", function(){ navigator.serviceWorker.register("./sw.js").catch(function(){}); });
-}
+(function(){
+  if (!('serviceWorker' in navigator)) return;
+  window.addEventListener('load', function(){
+    // register FCM/messaging service worker (also handles caching)
+    navigator.serviceWorker.register('./firebase-messaging-sw.js').then(function(reg){
+      try{
+        if (window.firebase && firebase.messaging && window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey && window.FIREBASE_CONFIG.apiKey.indexOf('REPLACE_') !== 0) {
+          if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
+          var messaging = firebase.messaging();
+          try { messaging.useServiceWorker(reg); } catch(e) {}
+          window.__fcmMessaging = messaging;
+          window.__fcmSwReady = Promise.resolve(reg);
+        } else {
+          window.__fcmSwReady = Promise.resolve(reg);
+        }
+      }catch(e){ window.__fcmSwReady = Promise.resolve(reg); }
+    }).catch(function(){});
+  });
+})();
 </script>
 </body>
 </html>

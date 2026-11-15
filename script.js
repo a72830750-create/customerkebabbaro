@@ -39,6 +39,54 @@ const addressGroup = document.getElementById('address-group');
 
 let currentDish = null;
 
+// ===== FCM Web Push (safe fallback if unsupported/denied) =====
+var API_BASE_FCM = 'https://backend-1-osni.onrender.com';
+var __fcmTokenCache = null;
+
+function fcmSupported() {
+  try { return !!(window.isSecureContext && 'Notification' in window && 'serviceWorker' in navigator && window.firebase && firebase.messaging && window.FIREBASE_CONFIG); } catch (e) { return false; }
+}
+function fcmConfigValid() {
+  try {
+    var c = window.FIREBASE_CONFIG || {};
+    return c.apiKey && String(c.apiKey).indexOf('REPLACE_') !== 0 && c.projectId && String(c.projectId).indexOf('REPLACE_') !== 0 && c.vapidKey && String(c.vapidKey).indexOf('REPLACE_') !== 0;
+  } catch (e) { return false; }
+}
+function ensureFcmInit() {
+  if (!fcmSupported() || !fcmConfigValid()) return null;
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
+    if (!window.__fcmMessaging) window.__fcmMessaging = firebase.messaging();
+    return window.__fcmMessaging;
+  } catch (e) { return null; }
+}
+function registerFcmTokenForOrder(orderNumber) {
+  try {
+    if (!orderNumber) return Promise.resolve(null);
+    if (!('Notification' in window)) return Promise.resolve(null);
+    var messaging = ensureFcmInit();
+    if (!messaging) return Promise.resolve(null);
+    return Notification.requestPermission().then(function (perm) {
+      if (perm !== 'granted') return null;
+      var swReady = window.__fcmSwReady || navigator.serviceWorker.ready.catch(function(){ return null; });
+      return swReady.then(function (reg) {
+        if (!reg) return null;
+        try { if (messaging.useServiceWorker) messaging.useServiceWorker(reg); } catch (e) {}
+        return messaging.getToken({ vapidKey: window.FIREBASE_CONFIG.vapidKey, serviceWorkerRegistration: reg });
+      }).then(function (token) {
+        if (!token) return null;
+        __fcmTokenCache = token;
+        try { localStorage.setItem('faridkebab_fcm_token', token); } catch (e) {}
+        return fetch(API_BASE_FCM + '/api/orders/' + encodeURIComponent(orderNumber) + '/fcm-token', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_number: orderNumber, fcm_token: token })
+        }).catch(function(){ return null; });
+      }).catch(function(){ return null; });
+    }).catch(function(){ return null; });
+  } catch (e) { return Promise.resolve(null); }
+}
+
+
 // Active category tracking for quick nav
 function initQuickNavActive() {
     if (!('IntersectionObserver' in window)) return;
@@ -316,6 +364,7 @@ async function submitOrder() {
     saveCart();
     updateCartUI();
     closeCheckoutModal();
+    registerFcmTokenForOrder(order.order_number);
 }
 
 function getSavedAddresses() {
@@ -387,6 +436,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function showMyOrder(openModal){
     const key="faridkebab_last_order"; const dataKey="faridkebab_last_order_data";
     const num=localStorage.getItem(key); const mob=document.getElementById("my-order-btn"); const modal=document.getElementById("my-order-modal"); const el=document.getElementById("my-order-status");
+    if(num){ try{ registerFcmTokenForOrder(num); }catch(e){} }
     if(!num){
         if(openModal){ alert("Per favore, ordina qualcosa prima."); }
         if(mob)mob.style.display="none"; if(modal)modal.classList.remove("show"); if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;} return;
@@ -450,7 +500,7 @@ function showMyOrder(openModal){
     tick();
     if(localStorage.getItem(key)) window._myOrderTimer=setInterval(tick,5000);
 }
-if(localStorage.getItem("faridkebab_last_order")) showMyOrder(false);
+if(localStorage.getItem("faridkebab_last_order")) { try{ registerFcmTokenForOrder(localStorage.getItem("faridkebab_last_order")); }catch(e){} showMyOrder(false); }
 
 
     document.querySelectorAll('.quick-nav-btn').forEach(btn => {
