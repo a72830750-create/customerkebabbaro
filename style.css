@@ -901,3 +901,6 @@ section[id] h3::after {
 #my-order-status .order-items{list-style:none;padding:0;margin:8px 0}
 #my-order-status .order-items li{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;font-size:14px}
 #my-order-status .order-total{font-weight:700;font-size:16px;margin-top:8px;text-align:right}
+.order-status-modal-content{max-width:560px;width:95%;max-height:85vh;overflow-y:auto;padding-top:18px;}
+.order-status-modal-content h3{margin-right:28px;}
+#my-order-status{min-height:140px;}

@@ -27,21 +27,23 @@ const checkoutClose = document.getElementById('checkout-close');
 const checkoutBack = document.getElementById('checkout-back');
 const checkoutSubmit = document.getElementById('checkout-submit');
 const checkoutSummary = document.getElementById('checkout-summary');
-const checkoutSubtotal = document.getElementById('checkout-subtotal');
-const checkoutDelivery = document.getElementById('checkout-delivery');
 const checkoutGrandTotal = document.getElementById('checkout-grand-total');
 const checkoutStatus = document.getElementById('checkout-status');
 const confirmModal = document.getElementById('confirm-modal');
 const confirmOk = document.getElementById('confirm-ok');
 const confirmTitle = document.getElementById('confirm-title');
 const confirmMessage = document.getElementById('confirm-message');
-const addressGroup = document.getElementById('address-group');
 
 let currentDish = null;
 
 // ===== FCM Web Push (safe fallback if unsupported/denied) =====
 var API_BASE_FCM = 'https://backend-1-osni.onrender.com';
 var __fcmTokenCache = null;
+var __fcmPermissionPromise = null;
+var __fcmMessagingSwRegPromise = null;
+
+function fcmLog() { try { console.log.apply(console, ['[FCM]'].concat([].slice.call(arguments))); } catch(e){} }
+function fcmWarn() { try { console.warn.apply(console, ['[FCM]'].concat([].slice.call(arguments))); } catch(e){} }
 
 function fcmSupported() {
   try { return !!(window.isSecureContext && 'Notification' in window && 'serviceWorker' in navigator && window.firebase && firebase.messaging && window.FIREBASE_CONFIG); } catch (e) { return false; }
@@ -49,42 +51,120 @@ function fcmSupported() {
 function fcmConfigValid() {
   try {
     var c = window.FIREBASE_CONFIG || {};
-    return c.apiKey && String(c.apiKey).indexOf('REPLACE_') !== 0 && c.projectId && String(c.projectId).indexOf('REPLACE_') !== 0 && c.vapidKey && String(c.vapidKey).indexOf('REPLACE_') !== 0;
-  } catch (e) { return false; }
+    var ok = c.apiKey && String(c.apiKey).indexOf('REPLACE_') !== 0 && c.projectId && String(c.projectId).indexOf('REPLACE_') !== 0 && c.vapidKey && String(c.vapidKey).indexOf('REPLACE_') !== 0;
+    if (!ok) fcmWarn('config invalid or placeholders present');
+    return ok;
+  } catch (e) { fcmWarn('config check error', e); return false; }
 }
 function ensureFcmInit() {
-  if (!fcmSupported() || !fcmConfigValid()) return null;
+  if (!fcmSupported() || !fcmConfigValid()) { fcmWarn('init skipped', { supported: fcmSupported(), secure: window.isSecureContext }); return null; }
   try {
     if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
     if (!window.__fcmMessaging) window.__fcmMessaging = firebase.messaging();
+    fcmLog('messaging ready');
     return window.__fcmMessaging;
-  } catch (e) { return null; }
+  } catch (e) { fcmWarn('init error', e); return null; }
+}
+function getFcmMessagingSwReg() {
+  if (window.__fcmSwReg) { fcmLog('using cached messaging SW reg', window.__fcmSwReg.scope); return Promise.resolve(window.__fcmSwReg); }
+  if (window.__fcmSwReady) {
+    return Promise.resolve(window.__fcmSwReady).then(function(r){
+      if (r) { window.__fcmSwReg = r; fcmLog('using __fcmSwReady reg', r.scope); }
+      return r || null;
+    }).catch(function(e){ fcmWarn('sw ready error', e); return null; });
+  }
+  if (__fcmMessagingSwRegPromise) return __fcmMessagingSwRegPromise;
+  if (!('serviceWorker' in navigator)) { fcmWarn('serviceWorker unsupported'); return Promise.resolve(null); }
+  fcmLog('registering messaging SW fallback');
+  __fcmMessagingSwRegPromise = navigator.serviceWorker.register('./firebase-messaging-sw.js', { scope: './firebase-cloud-messaging-push-scope/' }).then(function(reg){
+    window.__fcmSwReg = reg; window.__fcmSwReady = Promise.resolve(reg);
+    fcmLog('messaging SW registered (fallback)', reg && reg.scope);
+    return reg;
+  }).catch(function(e){ fcmWarn('messaging SW register error', e); return null; });
+  return __fcmMessagingSwRegPromise;
+}
+function requestNotificationPermissionOnGesture() {
+  try {
+    if (!('Notification' in window)) { fcmWarn('Notification API unavailable'); return Promise.resolve('unsupported'); }
+    var cur = Notification.permission;
+    fcmLog('permission current', cur);
+    if (cur === 'granted' || cur === 'denied') return Promise.resolve(cur);
+    if (__fcmPermissionPromise) { fcmLog('permission request already in flight'); return __fcmPermissionPromise; }
+    fcmLog('requesting notification permission (user gesture)');
+    __fcmPermissionPromise = Notification.requestPermission().then(function(p){
+      __fcmPermissionPromise = null;
+      fcmLog('permission result', p);
+      try { updateEnableNotificationsButton(); } catch(e){}
+      return p;
+    }).catch(function(e){
+      __fcmPermissionPromise = null;
+      fcmWarn('permission request error', e);
+      return 'default';
+    });
+    return __fcmPermissionPromise;
+  } catch(e){ fcmWarn('permission gesture error', e); return Promise.resolve('error'); }
+}
+function updateEnableNotificationsButton() {
+  try {
+    var btn = document.getElementById('enable-order-notifications-btn');
+    if (!btn) return;
+    var show = ('Notification' in window) && Notification.permission !== 'granted';
+    btn.style.display = show ? 'block' : 'none';
+    btn.disabled = false;
+    if (show && !btn._fcmBound) {
+      btn._fcmBound = true;
+      btn.addEventListener('click', function(){ enableOrderNotificationsFromGesture(); });
+    }
+  } catch(e){ fcmWarn('updateEnableNotificationsButton error', e); }
+}
+function enableOrderNotificationsFromGesture() {
+  fcmLog('enable notifications button clicked');
+  requestNotificationPermissionOnGesture().then(function(perm){
+    updateEnableNotificationsButton();
+    if (perm !== 'granted') { fcmWarn('permission not granted; token not registered'); return; }
+    var num = null;
+    try { num = localStorage.getItem('faridkebab_last_order'); } catch(e){}
+    if (!num) { fcmWarn('no last order found for token registration'); return; }
+    registerFcmTokenForOrder(num);
+  }).catch(function(e){ fcmWarn('enable notifications flow error', e); });
 }
 function registerFcmTokenForOrder(orderNumber) {
   try {
-    if (!orderNumber) return Promise.resolve(null);
-    if (!('Notification' in window)) return Promise.resolve(null);
+    fcmLog('registerFcmTokenForOrder start', orderNumber);
+    if (!orderNumber) { fcmWarn('no orderNumber'); return Promise.resolve(null); }
+    if (!('Notification' in window)) { fcmWarn('Notification unsupported'); return Promise.resolve(null); }
+    fcmLog('permission state', Notification.permission);
+    if (Notification.permission === 'denied') { fcmWarn('permission denied'); updateEnableNotificationsButton(); return Promise.resolve(null); }
+    if (Notification.permission !== 'granted') { fcmWarn('permission not granted yet'); updateEnableNotificationsButton(); return Promise.resolve(null); }
     var messaging = ensureFcmInit();
-    if (!messaging) return Promise.resolve(null);
-    return Notification.requestPermission().then(function (perm) {
-      if (perm !== 'granted') return null;
-      var swReady = window.__fcmSwReady || navigator.serviceWorker.ready.catch(function(){ return null; });
-      return swReady.then(function (reg) {
-        if (!reg) return null;
-        try { if (messaging.useServiceWorker) messaging.useServiceWorker(reg); } catch (e) {}
-        return messaging.getToken({ vapidKey: window.FIREBASE_CONFIG.vapidKey, serviceWorkerRegistration: reg });
-      }).then(function (token) {
-        if (!token) return null;
-        __fcmTokenCache = token;
-        try { localStorage.setItem('faridkebab_fcm_token', token); } catch (e) {}
-        return fetch(API_BASE_FCM + '/api/orders/' + encodeURIComponent(orderNumber) + '/fcm-token', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_number: orderNumber, fcm_token: token })
-        }).catch(function(){ return null; });
-      }).catch(function(){ return null; });
-    }).catch(function(){ return null; });
-  } catch (e) { return Promise.resolve(null); }
+    if (!messaging) { fcmWarn('messaging unavailable'); return Promise.resolve(null); }
+    return getFcmMessagingSwReg().then(function (reg) {
+      fcmLog('SW registration for token', reg && reg.scope);
+      if (!reg) { fcmWarn('no serviceWorkerRegistration for messaging'); return null; }
+      try { if (messaging.useServiceWorker) messaging.useServiceWorker(reg); } catch (e) { fcmWarn('useServiceWorker error', e); }
+      fcmLog('calling getToken');
+      return messaging.getToken({ vapidKey: window.FIREBASE_CONFIG.vapidKey, serviceWorkerRegistration: reg });
+    }).then(function (token) {
+      fcmLog('getToken result', token ? ('token received len=' + token.length) : 'no token');
+      if (!token) { fcmWarn('no FCM token received'); return null; }
+      __fcmTokenCache = token;
+      try { localStorage.setItem('faridkebab_fcm_token', token); } catch (e) {}
+      var url = API_BASE_FCM + '/api/orders/' + encodeURIComponent(orderNumber) + '/fcm-token';
+      fcmLog('POSTing token', { url: url, order_number: orderNumber });
+      return fetch(url, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_number: orderNumber, fcm_token: token })
+      }).then(function(resp){
+        fcmLog('POST /api/orders/:orderNumber/fcm-token status', resp && resp.status);
+        if (!resp || !resp.ok) {
+          return (resp && resp.text ? resp.text() : Promise.resolve('')).then(function(t){ fcmWarn('POST token failed', resp && resp.status, t); return resp; }).catch(function(){ fcmWarn('POST token failed', resp && resp.status); return resp; });
+        }
+        return resp;
+      }).catch(function(e){ fcmWarn('POST token error', e); return null; });
+    }).catch(function(e){ fcmWarn('getToken/register error', e); return null; });
+  } catch (e) { fcmWarn('registerFcmTokenForOrder exception', e); return Promise.resolve(null); }
 }
+document.addEventListener('visibilitychange', function(){ try{ updateEnableNotificationsButton(); }catch(e){} });
 
 
 // Active category tracking for quick nav
@@ -195,32 +275,17 @@ function closeCartModal() {
 function openCheckoutModal() {
     closeCartModal();
     const total = getCartTotal();
-    const deliveryFee = 0.00;
-    const grandTotal = total + deliveryFee;
-    if (checkoutSubtotal) checkoutSubtotal.textContent = '€' + total.toFixed(2);
-    if (checkoutDelivery) checkoutDelivery.textContent = '€' + deliveryFee.toFixed(2);
-    if (checkoutGrandTotal) checkoutGrandTotal.textContent = '€' + grandTotal.toFixed(2);
+    if (checkoutGrandTotal) checkoutGrandTotal.textContent = '€' + total.toFixed(2);
 
     let html = '';
     cart.forEach(item => {
-        html += '<p>' + item.name + ' (x' + item.qty + ') - €' + (item.price * item.qty).toFixed(2) + (item.requests ? '<br><small>Note: ' + item.requests + '</small>' : '') + '</p>';
+        html += '<p>' + item.name + ' (x' + item.qty + ') - €' + (Number(item.price || 0) * Number(item.qty || 0)).toFixed(2) + (item.requests ? '<br><small>Note: ' + item.requests + '</small>' : '') + '</p>';
     });
     if (checkoutSummary) checkoutSummary.innerHTML = html || '<p>Nessun articolo nel carrello</p>';
 
-    const minMsg = document.getElementById('min-order-msg');
-    const checkoutSubmitBtn = document.getElementById('checkout-submit');
-    if (minMsg) {
-        const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'delivery';
-        if (orderType === 'delivery' && total < 15) {
-            minMsg.textContent = 'Aggiungi €' + (15 - total).toFixed(2) + ' per la consegna.';
-            minMsg.style.display = 'block';
-            if (checkoutSubmitBtn) checkoutSubmitBtn.disabled = true;
-        } else {
-            minMsg.textContent = '';
-            minMsg.style.display = 'none';
-            if (checkoutSubmitBtn) checkoutSubmitBtn.disabled = false;
-        }
-    }
+    const pickupGroup = document.getElementById('pickup-time-group');
+    if (pickupGroup) pickupGroup.style.display = 'block';
+    if (checkoutSubmit) checkoutSubmit.disabled = cart.length === 0;
     if (checkoutModal) checkoutModal.classList.add('show');
 }
 
@@ -294,48 +359,37 @@ function showOrderNotification(title, body, tag){
 }
 
 async function submitOrder() {
+    // Request notification permission on user gesture before any async checkout fetch (Safari/mobile)
+    try { requestNotificationPermissionOnGesture(); } catch(e) { fcmWarn('permission gesture call error', e); }
+
     const name = document.getElementById('customer-name')?.value.trim() || '';
     const phone = document.getElementById('customer-phone')?.value.trim() || '';
-    const street = document.getElementById('addr-street')?.value.trim() || '';
-    const city = document.getElementById('addr-city')?.value.trim() || '';
-    const postcode = document.getElementById('addr-postcode')?.value.trim() || '';
-    const address = [street, city, postcode].filter(Boolean).join(', ');
-    const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'delivery';
+    const orderType = 'pickup';
     const itemNotes = cart.map(i => i.requests ? (i.name + ': ' + i.requests) : '').filter(Boolean).join('; ');
     const orderNotes = document.getElementById('order-notes')?.value.trim() || '';
     const notes = [itemNotes, orderNotes].filter(Boolean).join('; ');
-    const deliveryTiming = document.querySelector('input[name="delivery_timing"]:checked')?.value || 'now';
-    const deliveryTime = document.getElementById('delivery-time')?.value || null;
-    const pickupTime = document.getElementById('pickup-time')?.value || null;
+    const pickupTime = document.getElementById('pickup-time')?.value || 'ASAP';
 
     try { const r=await fetch('https://backend-1-osni.onrender.com/api/settings'); const d=await r.json(); if(d.accepting_orders==='false'){ if(checkoutStatus){checkoutStatus.textContent='Ristorante chiuso. Ordini non accettati.';checkoutStatus.className='checkout-status error';} return; } } catch(e){}
-    if (orderType === 'delivery' && getCartTotal() < 15) { if (checkoutStatus) { checkoutStatus.textContent = 'Ordine minimo per consegna: €15.00.'; checkoutStatus.className = 'checkout-status error'; } return; }
     if (!name || !phone) { if (checkoutStatus) { checkoutStatus.textContent = 'Compila nome e telefono.'; checkoutStatus.className = 'checkout-status error'; } return; }
-    if (orderType === 'delivery' && !address) { if (checkoutStatus) { checkoutStatus.textContent = 'Inserisci indirizzo di consegna.'; checkoutStatus.className = 'checkout-status error'; } return; }
-    if (orderType === 'delivery') {
-        if (!address.toLowerCase().includes('pescia')) {
-            if (checkoutStatus) { checkoutStatus.textContent = 'Non consegniamo fuori da pescia.'; checkoutStatus.className = 'checkout-status error'; }
-            return;
-        }
-    }
+    if (!cart.length) { if (checkoutStatus) { checkoutStatus.textContent = 'Il carrello è vuoto.'; checkoutStatus.className = 'checkout-status error'; } return; }
 
-    const summary = cart.map(i => i.name + ' (x' + i.qty + ') - €' + (i.price * i.qty).toFixed(2)).join('\n');
-    const deliveryFee = 0.00;
-    const total = getCartTotal() + deliveryFee;
+    const summary = cart.map(i => i.name + ' (x' + i.qty + ') - €' + (Number(i.price || 0) * Number(i.qty || 0)).toFixed(2)).join('\n');
+    const total = getCartTotal();
     const order = {
         order_number: 'ORD-' + Date.now().toString().slice(-6),
         order_type: orderType,
         customer_name: name,
         customer_phone: phone,
-        delivery_address: orderType === 'delivery' ? address : null,
+        delivery_address: null,
         notes: notes,
-        delivery_timing: deliveryTiming,
-        delivery_time: deliveryTiming === 'later' ? deliveryTime : 'now',
-        pickup_time: orderType === 'pickup' ? pickupTime : null,
+        delivery_timing: null,
+        delivery_time: null,
+        pickup_time: pickupTime || 'ASAP',
         subtotal: getCartTotal(),
-        delivery_fee: deliveryFee,
+        delivery_fee: 0,
         total: total,
-        items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price }))
+        items: cart.map(i => ({ name: i.name, qty: Number(i.qty || 0), price: Number(i.price || 0) }))
     };
 
     try {
@@ -353,18 +407,25 @@ async function submitOrder() {
 
     if (confirmTitle) confirmTitle.textContent = 'Ordine Confermato!';
     const leaveMsg = 'Puoi uscire: riceverai notifiche sullo stato del tuo ordine.';
-    if (confirmMessage) confirmMessage.textContent = 'Grazie, ' + name + '!\n\n' + summary + '\n\nTotal: €' + total.toFixed(2) + '\n' + (orderType === 'delivery' ? 'Consegna a: ' + address : 'Ritiro') + (notes ? '\nNote: ' + notes : '') + '\n\n' + leaveMsg;
+    if (confirmMessage) confirmMessage.textContent = 'Grazie, ' + name + '!\n\n' + summary + '\n\nTotale: €' + total.toFixed(2) + '\nRitiro: ' + (pickupTime || 'ASAP') + (notes ? '\nNote: ' + notes : '') + '\n\n' + leaveMsg;
     if (confirmModal) confirmModal.classList.add('show');
 
     localStorage.setItem("faridkebab_last_order", order.order_number);
     try{ localStorage.removeItem('faridkebab_last_notified_status'); localStorage.removeItem('faridkebab_last_order_data'); }catch(e){}
+    try { updateEnableNotificationsButton(); } catch(e){}
     requestOrderNotificationPermission();
     showOrderNotification('Ordine inviato', leaveMsg, 'order-' + order.order_number);
     cart = [];
     saveCart();
     updateCartUI();
     closeCheckoutModal();
-    registerFcmTokenForOrder(order.order_number);
+    try {
+        if (__fcmPermissionPromise && typeof __fcmPermissionPromise.then === 'function') {
+            __fcmPermissionPromise.then(function(){ registerFcmTokenForOrder(order.order_number); }).catch(function(){ registerFcmTokenForOrder(order.order_number); });
+        } else {
+            registerFcmTokenForOrder(order.order_number);
+        }
+    } catch(e) { try{ registerFcmTokenForOrder(order.order_number); }catch(_e){} }
 }
 
 function getSavedAddresses() {
@@ -443,6 +504,14 @@ function showMyOrder(openModal){
     }
     if(mob)mob.style.display="flex";
     if(openModal && modal) modal.classList.add("show");
+    try{
+        var enBtn = document.getElementById('enable-order-notifications-btn');
+        if (enBtn && !enBtn._fcmBound) { enBtn._fcmBound = true; enBtn.addEventListener('click', function(){ enableOrderNotificationsFromGesture(); }); }
+        updateEnableNotificationsButton();
+        var closeBtn = document.getElementById('my-order-close');
+        if (closeBtn && !closeBtn._bound) { closeBtn._bound = true; closeBtn.addEventListener('click', function(){ if(modal) modal.classList.remove('show'); }); }
+        if (modal && !modal._bound) { modal._bound = true; modal.addEventListener('click', function(e){ if(e.target===modal) modal.classList.remove('show'); }); }
+    }catch(e){ fcmWarn('enable notifications button setup error', e); }
     function playOrderCompleteSound(){
         try{
             const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
@@ -475,10 +544,12 @@ function showMyOrder(openModal){
         const idxR=rejected?-1:statuses.indexOf(dRender.status);
         let html="<div class='order-timeline'>";statuses.forEach((s,i)=>{const done=!rejected&&i<=idxR;const cur=!rejected&&i===idxR;html+="<div class='tl-step"+(done?" done":"")+(cur?" current":"")+"'><span class='tl-dot'></span><span class='tl-label'>"+labels[s]+"</span></div>";});if(rejected)html+="<div class='tl-step rejected current'><span class='tl-dot'></span><span class='tl-label'>"+labels.rejected+"</span></div>";html+="</div>";
         html+="<div class='order-current'>"+(labels[dRender.status]||dRender.status)+"</div>";
-        const eta=dRender.order_type==="pickup"? (dRender.pickup_time||"ASAP") : (dRender.delivery_timing==="later"?(dRender.delivery_time||"ASAP"):"ASAP");
-        html+="<div class='order-eta'>"+(dRender.order_type==="pickup"?"Ritiro: ":"Consegna: ")+eta+"</div>";
-        if(dRender.items&&dRender.items.length){html+="<ul class='order-items'>"+dRender.items.map(i=>"<li>"+i.qty+"x "+i.name+" <span>EUR"+(Number(i.qty)*Number(i.price)).toFixed(2)+"</span></li>").join("")+"</ul>";}
-        html+="<div class='order-total'>EUR"+Number(dRender.total||0).toFixed(2)+"</div>";
+        const eta = dRender.pickup_time || "ASAP";
+        html+="<div class='order-eta'>Ritiro: "+eta+"</div>";
+        if(dRender.items&&dRender.items.length){html+="<ul class='order-items'>"+dRender.items.map(i=>"<li>"+Number(i.qty||0)+"x "+(i.name||'')+" <span>\u20ac"+(Number(i.qty||0)*Number(i.price||0)).toFixed(2)+"</span></li>").join("")+"</ul>";}
+        const itemsTotal = (dRender.items||[]).reduce((s,i)=>s + (Number(i.qty||0)*Number(i.price||0)), 0);
+        const shownTotal = (dRender.total!=null && !isNaN(Number(dRender.total)) && Number(dRender.total)>0) ? Number(dRender.total) : itemsTotal;
+        html+="<div class='order-total'>Totale: \u20ac"+shownTotal.toFixed(2)+"</div>";
         if(el)el.innerHTML=html;
         if(d.status!=="completed"){ try{localStorage.setItem(dataKey,JSON.stringify(d));}catch(e){} }
         if(d.status==="completed"){
@@ -500,6 +571,8 @@ function showMyOrder(openModal){
     tick();
     if(localStorage.getItem(key)) window._myOrderTimer=setInterval(tick,5000);
 }
+try{ updateEnableNotificationsButton(); }catch(e){}
+try{ updateEnableNotificationsButton(); }catch(e){}
 if(localStorage.getItem("faridkebab_last_order")) { try{ registerFcmTokenForOrder(localStorage.getItem("faridkebab_last_order")); }catch(e){} showMyOrder(false); }
 
 
@@ -564,43 +637,6 @@ if(localStorage.getItem("faridkebab_last_order")) { try{ registerFcmTokenForOrde
     if (checkoutBack) checkoutBack.addEventListener('click', closeCheckoutModal);
     if (checkoutSubmit) checkoutSubmit.addEventListener('click', submitOrder);
     if (checkoutModal) checkoutModal.addEventListener('click', function(e) { if (e.target === checkoutModal) closeCheckoutModal(); });
-
-    document.querySelectorAll('input[name="order_type"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (addressGroup) addressGroup.style.display = this.value === 'delivery' ? 'block' : 'none';
-            const minMsg = document.getElementById('min-order-msg');
-            const checkoutSubmitBtn = document.getElementById('checkout-submit');
-            const total = getCartTotal();
-            if (minMsg) {
-                if (this.value === 'delivery' && total < 15) {
-                    minMsg.textContent = 'Aggiungi €' + (15 - total).toFixed(2) + ' per la consegna.';
-                    minMsg.style.display = 'block';
-                    if (checkoutSubmitBtn) checkoutSubmitBtn.disabled = true;
-                } else {
-                    minMsg.textContent = '';
-                    minMsg.style.display = 'none';
-                    if (checkoutSubmitBtn) checkoutSubmitBtn.disabled = false;
-                }
-            }
-        });
-    });
-
-    const saveCheck = document.getElementById('save-address-check');
-    if (saveCheck) {
-        saveCheck.addEventListener('change', function() {
-            const group = document.getElementById('save-address-label-group');
-            if (group) group.style.display = this.checked ? 'block' : 'none';
-        });
-    }
-
-    const openSavedBtn = document.getElementById('open-saved-addresses-btn');
-    if (openSavedBtn) openSavedBtn.addEventListener('click', openSavedAddressesModal);
-    const savedClose = document.getElementById('saved-addresses-close');
-    if (savedClose) savedClose.addEventListener('click', closeSavedAddressesModal);
-    const savedCancel = document.getElementById('saved-addresses-cancel');
-    if (savedCancel) savedCancel.addEventListener('click', closeSavedAddressesModal);
-    const savedModal = document.getElementById('saved-addresses-modal');
-    if (savedModal) savedModal.addEventListener('click', function(e) { if (e.target === savedModal) closeSavedAddressesModal(); });
 
     if (confirmOk) confirmOk.addEventListener('click', closeConfirmModal);
     if (confirmModal) confirmModal.addEventListener('click', function(e) { if (e.target === confirmModal) closeConfirmModal(); });

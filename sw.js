@@ -1,10 +1,11 @@
-const CACHE = 'farid-kebab-v2';
+const CACHE = 'farid-kebab-v3';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './script.js',
   './manifest.json',
+  './firebase-config.js',
   './ali-kebabbaro-logo.png',
   './icon-192.png',
   './icon-512.png'
