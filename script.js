@@ -561,6 +561,7 @@ async function submitOrder() {
     try{ localStorage.removeItem('faridkebab_last_notified_status'); localStorage.removeItem('faridkebab_last_order_data'); }catch(e){}
     try { updateEnableNotificationsButton(); } catch(e){}
     requestOrderNotificationPermission();
+    try { if (typeof showMyOrder === 'function') showMyOrder(false); } catch(e){}
     showOrderNotification('Ordine inviato', leaveMsg, 'order-' + order.order_number);
     cart = [];
     saveCart();
