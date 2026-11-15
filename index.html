@@ -7,7 +7,11 @@
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Farid Kebab">
     <title>FARID KEBAB PESCIA - Consegna a domicilio</title>
+    <link rel="icon" type="image/png" href="ali-kebabbaro-logo.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://backend-1-osni.onrender.com">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -477,5 +481,11 @@ buildTimes("delivery-time");buildTimes("pickup-time");
 
 
 <div id="my-order-modal" class="modal"><div class="modal-content"><h3>Order Status</h3><div id="my-order-status"></div></div></div>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("./sw.js").catch(function(){}); });
+}
+</script>
 </body>
 </html>
