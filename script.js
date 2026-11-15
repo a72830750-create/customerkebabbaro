@@ -558,10 +558,11 @@ async function submitOrder() {
     try { showNotificationPopup(true); } catch(e){}
 
     localStorage.setItem("faridkebab_last_order", order.order_number);
-    try{ localStorage.removeItem('faridkebab_last_notified_status'); localStorage.removeItem('faridkebab_last_order_data'); }catch(e){}
+    try{ localStorage.removeItem('faridkebab_last_notified_status'); }catch(e){}
+    try{ localStorage.setItem('faridkebab_last_order_data', JSON.stringify(Object.assign({ status: 'new', created_at: new Date().toISOString() }, order))); }catch(e){}
     try { updateEnableNotificationsButton(); } catch(e){}
     requestOrderNotificationPermission();
-    try { if (typeof showMyOrder === 'function') showMyOrder(false); } catch(e){}
+    try { if (typeof showMyOrder === 'function') showMyOrder(true); } catch(e){}
     showOrderNotification('Ordine inviato', leaveMsg, 'order-' + order.order_number);
     cart = [];
     saveCart();
@@ -669,9 +670,9 @@ function showMyOrder(openModal){
     }
     function render(d){
         if(!d) return;
-        const statuses=["new","accepted","preparing","ready","out_for_delivery","completed"]; const rejected=d.status==="rejected"; const idx=rejected?-1:statuses.indexOf(d.status);
-        const labels={new:"Nuovo",accepted:"Accettato",preparing:"In preparazione",ready:"Pronto",out_for_delivery:"In consegna",completed:"Completato",rejected:"Rifiutato"};
-        const notifyMsgs={new:"Ordine ricevuto",accepted:"Ordine accettato",preparing:"Ordine in preparazione",ready:"Ordine pronto",out_for_delivery:"Ordine in consegna",completed:"Ordine completato!",rejected:"Ordine rifiutato"};
+        const statuses=["new","accepted","preparing","ready","completed"]; const rejected=d.status==="rejected"; const idx=rejected?-1:statuses.indexOf(d.status);
+        const labels={new:"Nuovo",accepted:"Accettato",preparing:"In preparazione",ready:"Pronto per il ritiro",completed:"Completato",rejected:"Rifiutato"};
+        const notifyMsgs={new:"Ordine ricevuto",accepted:"Ordine accettato",preparing:"Ordine in preparazione",ready:"Ordine pronto per il ritiro",completed:"Ordine completato!",rejected:"Ordine rifiutato"};
         const prevStatus=(window._lastRenderedOrderStatus||"");
         const notifiedKey='faridkebab_last_notified_status';
         const lastNotified=localStorage.getItem(notifiedKey)||'';
@@ -686,25 +687,20 @@ function showMyOrder(openModal){
             playOrderCompleteSound();
         }
         window._lastRenderedOrderStatus=d.status;
-        const dRender=(d.status==="completed")?Object.assign({},d,{status:"out_for_delivery"}):d;
-        const idxR=rejected?-1:statuses.indexOf(dRender.status);
+        const idxR=rejected?-1:statuses.indexOf(d.status);
         let html="<div class='order-timeline'>";statuses.forEach((s,i)=>{const done=!rejected&&i<=idxR;const cur=!rejected&&i===idxR;html+="<div class='tl-step"+(done?" done":"")+(cur?" current":"")+"'><span class='tl-dot'></span><span class='tl-label'>"+labels[s]+"</span></div>";});if(rejected)html+="<div class='tl-step rejected current'><span class='tl-dot'></span><span class='tl-label'>"+labels.rejected+"</span></div>";html+="</div>";
-        html+="<div class='order-current'>"+(labels[dRender.status]||dRender.status)+"</div>";
-        const eta = dRender.pickup_time || "ASAP";
+        html+="<div class='order-current'>"+(labels[d.status]||d.status)+"</div>";
+        const eta = d.pickup_time || "ASAP";
         html+="<div class='order-eta'>Ritiro: "+eta+"</div>";
-        if(dRender.items&&dRender.items.length){html+="<ul class='order-items'>"+dRender.items.map(i=>"<li>"+Number(i.qty||0)+"x "+(i.name||'')+" <span>\u20ac"+(Number(i.qty||0)*Number(i.price||0)).toFixed(2)+"</span></li>").join("")+"</ul>";}
-        const itemsTotal = (dRender.items||[]).reduce((s,i)=>s + (Number(i.qty||0)*Number(i.price||0)), 0);
-        const shownTotal = (dRender.total!=null && !isNaN(Number(dRender.total)) && Number(dRender.total)>0) ? Number(dRender.total) : itemsTotal;
+        if(d.items&&d.items.length){html+="<ul class='order-items'>"+d.items.map(i=>"<li>"+Number(i.qty||0)+"x "+(i.name||'')+" <span>\u20ac"+(Number(i.qty||0)*Number(i.price||0)).toFixed(2)+"</span></li>").join("")+"</ul>";}
+        const itemsTotal = (d.items||[]).reduce((s,i)=>s + (Number(i.qty||0)*Number(i.price||0)), 0);
+        const shownTotal = (d.total!=null && !isNaN(Number(d.total)) && Number(d.total)>0) ? Number(d.total) : itemsTotal;
         html+="<div class='order-total'>Totale: \u20ac"+shownTotal.toFixed(2)+"</div>";
         if(el)el.innerHTML=html;
-        if(d.status!=="completed"){ try{localStorage.setItem(dataKey,JSON.stringify(d));}catch(e){} }
+        try{ localStorage.setItem(key, String(d.order_number||num||'')); localStorage.setItem(dataKey,JSON.stringify(d)); }catch(e){}
         if(d.status==="completed"){
             if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;}
-            localStorage.removeItem(key); localStorage.removeItem(dataKey);
-            try{ localStorage.removeItem(notifiedKey); }catch(e){}
-            window._lastRenderedOrderStatus=null;
-            window._orderCompletedNotified=false;
-            // keep UI visible (status shown/reset to out_for_delivery) until closed; reset on next open
+            // keep order/status stored and visible until a new order replaces it
         }
     }
     let cached=null; try{cached=JSON.parse(localStorage.getItem(dataKey)||"null");}catch(e){}
