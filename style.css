@@ -10,6 +10,9 @@
     --text-primary: #282724;
     --text-secondary: #282724;
     --text-muted: #282724;
+    --contrast: #1a1a1a;
+    --selection: #a1a1a1;
+    --highlight: #cfcfcf;
     --border: rgba(40,39,36,0.12);
     --border-light: rgba(26,26,26,0.04);
     --shadow-xs: 0 1px 2px rgba(0,0,0,0.02);
@@ -27,9 +30,11 @@
 
 * { 
     box-sizing: border-box; 
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: var(--highlight);
     touch-action: manipulation;
 }
+::selection { background: var(--selection); color: var(--contrast); }
+::-moz-selection { background: var(--selection); color: var(--contrast); }
 html, body { 
     width: 100%; 
     max-width: 100%; 
