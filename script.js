@@ -684,6 +684,7 @@ function showMyOrder(openModal){
     const num=localStorage.getItem(key); const mob=document.getElementById("my-order-btn"); const modal=document.getElementById("my-order-modal"); const el=document.getElementById("my-order-status");
     if(num){ try{ registerFcmTokenForOrder(num); }catch(e){} }
     if(!num){
+        window._orderStatusLocked = false;
         if(openModal){ alert("Per favore, ordina qualcosa prima."); }
         if(mob)mob.style.display="none"; if(modal)modal.classList.remove("show"); if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;} return;
     }
@@ -691,8 +692,21 @@ function showMyOrder(openModal){
     if(openModal && modal) modal.classList.add("show");
     try{
         var closeBtn = document.getElementById('my-order-close');
-        if (closeBtn && !closeBtn._bound) { closeBtn._bound = true; closeBtn.addEventListener('click', function(){ if(modal) modal.classList.remove('show'); }); }
-        if (modal && !modal._bound) { modal._bound = true; modal.addEventListener('click', function(e){ if(e.target===modal) modal.classList.remove('show'); }); }
+        if (closeBtn && !closeBtn._bound) {
+            closeBtn._bound = true;
+            closeBtn.addEventListener('click', function(){
+                if (window._orderStatusLocked) return;
+                try{ localStorage.removeItem(key); localStorage.removeItem(dataKey); localStorage.removeItem('faridkebab_last_notified_status'); }catch(e){}
+                if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;}
+                window._lastRenderedOrderStatus=null; window._orderCompletedNotified=false; window._orderStatusLocked=false;
+                if(modal) modal.classList.remove('show');
+                if(mob) mob.style.display='none';
+            });
+        }
+        if (modal && !modal._bound) {
+            modal._bound = true;
+            modal.addEventListener('click', function(e){ if(e.target===modal){ if (window._orderStatusLocked) return; if(closeBtn) closeBtn.click(); } });
+        }
         updateEnableNotificationsButton();
     }catch(e){ fcmWarn('enable notifications button setup error', e); }
     function playOrderCompleteSound(){
@@ -733,10 +747,18 @@ function showMyOrder(openModal){
         const shownTotal = (d.total!=null && !isNaN(Number(d.total)) && Number(d.total)>0) ? Number(d.total) : itemsTotal;
         html+="<div class='order-total'>Totale: \u20ac"+shownTotal.toFixed(2)+"</div>";
         if(el)el.innerHTML=html;
+        const isDone = (d.status === 'completed' || d.status === 'rejected');
+        window._orderStatusLocked = !isDone;
+        try{
+            var _closeBtn = document.getElementById('my-order-close');
+            var _modal = document.getElementById('my-order-modal');
+            if (_closeBtn) _closeBtn.style.display = isDone ? '' : 'none';
+            if (_modal && !isDone) _modal.classList.add('show');
+        }catch(e){}
         try{ localStorage.setItem(key, String(d.order_number||num||'')); localStorage.setItem(dataKey,JSON.stringify(d)); }catch(e){}
-        if(d.status==="completed"){
+        if(d.status==="completed" || d.status==="rejected"){
             if(window._myOrderTimer){clearInterval(window._myOrderTimer);window._myOrderTimer=null;}
-            // keep order/status stored and visible until a new order replaces it
+            // unlock/allow close when done; kept stored until user closes or new order replaces it
         }
     }
     let cached=null; try{cached=JSON.parse(localStorage.getItem(dataKey)||"null");}catch(e){}
